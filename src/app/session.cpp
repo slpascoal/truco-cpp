@@ -391,6 +391,9 @@ void Session::refreshView() {
     view_.humanTrickCard = game_.currentTrickCard(Side::Human);
     view_.cpuTrickCard = game_.currentTrickCard(Side::Cpu);
     view_.revealCpu = game_.revealed();
+    view_.manilhaText = "MANILHA: " + rankLabel(manilhaRank(game_.deal().vira.rank));
+    view_.trickText = "Vazas: voce " + std::to_string(game_.progress().tricksWon(Side::Human)) +
+                      " x " + std::to_string(game_.progress().tricksWon(Side::Cpu)) + " CPU";
 
     if (game_.handKind() == HandKind::IronHand) {
         view_.stakeText = "MAO DE FERRO VALE 3";

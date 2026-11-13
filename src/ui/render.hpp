@@ -31,6 +31,8 @@ struct ViewModel {
     int humanScore = 0;
     int cpuScore = 0;
     std::string stakeText;
+    std::string manilhaText;
+    std::string trickText;
     std::string turnText;
     std::string message;
 

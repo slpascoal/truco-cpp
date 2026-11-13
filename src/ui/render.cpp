@@ -261,6 +261,9 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
     if (!vm.turnText.empty()) {
         centeredText(canvas, 2, size.cols, vm.turnText, 6);
     }
+    if (!vm.trickText.empty()) {
+        canvas.text(1, 3, vm.trickText, 7);
+    }
 
     for (int i = 0; i < 3; ++i) {
         const bool played = vm.cpuPlayed[static_cast<size_t>(i)];
@@ -294,6 +297,9 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
     if (vm.vira.has_value()) {
         drawCard(canvas, layout.vira, *vm.vira, false, false, kBorder);
         canvas.text(layout.vira.x, layout.vira.y - 1, "VIRA", 7);
+        if (!vm.manilhaText.empty()) {
+            canvas.text(layout.vira.x, layout.vira.y + 7, vm.manilhaText, 5);
+        }
     }
 
     for (int i = 0; i < 3; ++i) {

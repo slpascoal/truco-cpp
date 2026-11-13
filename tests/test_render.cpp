@@ -204,3 +204,14 @@ TEST(render_selected_card_and_revealed_cpu) {
     }
     CHECK(frame.find("VIRA") != std::string::npos);
 }
+
+TEST(render_shows_manilha_and_trick_count) {
+    Terminal terminal;
+    Renderer renderer(terminal);
+    ViewModel vm = gameView();
+    vm.manilhaText = "MANILHA: 5";
+    vm.trickText = "Vazas: voce 1 x 0 CPU";
+    const std::string frame = stripAnsi(renderer.render(vm, Size{80, 24}));
+    CHECK(frame.find("MANILHA: 5") != std::string::npos);
+    CHECK(frame.find("Vazas: voce 1 x 0 CPU") != std::string::npos);
+}

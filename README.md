@@ -85,7 +85,7 @@ tests/      suíte de testes com asserts, sem framework
 
 ## Testes
 
-`make test` roda 977 verificações cobrindo força das cartas, manilha, distribuição, vazas,
+`make test` roda cerca de 980 verificações cobrindo força das cartas, manilha, distribuição, vazas,
 empates, escala de truco, corre, mão de 11, mão de ferro, IA, parser de mouse SGR/X10, layout,
 renderização, resize e uma partida completa simulada até 12 pontos.
 
