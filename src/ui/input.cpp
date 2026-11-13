@@ -170,8 +170,25 @@ std::vector<InputEvent> parseInput(const std::string& buffer) {
             continue;
         }
 
-        if (byte == ' ' || (byte >= '0' && byte <= '9') || (byte >= 'a' && byte <= 'z') ||
-            (byte >= 'A' && byte <= 'Z')) {
+        if (byte == '\t') {
+            InputEvent event;
+            event.kind = InputEvent::Kind::Key;
+            event.key = '\t';
+            events.push_back(event);
+            ++i;
+            continue;
+        }
+
+        if (byte == 127 || byte == 8) {
+            InputEvent event;
+            event.kind = InputEvent::Kind::Key;
+            event.key = 127;
+            events.push_back(event);
+            ++i;
+            continue;
+        }
+
+        if (byte >= 0x20 && byte <= 0x7e) {
             InputEvent event;
             event.kind = InputEvent::Kind::Key;
             event.key = static_cast<char>(byte);

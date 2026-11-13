@@ -6,7 +6,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
 
 ## Tasks
 
-- [ ] 1. Campo de texto e parser de teclas imprimíveis
+- [x] 1. Campo de texto e parser de teclas imprimíveis
       altera: `src/ui/text_input.{hpp,cpp}`, `src/ui/input.cpp`, `tests/test_text_input.cpp`, `tests/test_input.cpp`
       consome: `parseInput`
       produz: `ui::TextInput` (value/cursor/handleKey/set/empty); `parseInput` repassa 0x20–0x7E, `\t`, 127

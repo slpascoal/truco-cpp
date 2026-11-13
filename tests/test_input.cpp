@@ -88,3 +88,17 @@ TEST(terminal_is_safe_without_tty) {
     CHECK(size.cols > 0);
     CHECK(size.rows > 0);
 }
+
+TEST(parse_forwards_printable_for_network_fields) {
+    const auto events = parseInput("192.168.0.1:4000\t");
+    CHECK_EQ(events.size(), size_t{17});
+    CHECK_EQ(events[3].key, '.');
+    CHECK_EQ(events[11].key, ':');
+    CHECK_EQ(events[16].key, '\t');
+}
+
+TEST(parse_forwards_backspace) {
+    const auto events = parseInput("1\x7f");
+    CHECK_EQ(events.size(), size_t{2});
+    CHECK_EQ(events[1].key, 127);
+}
