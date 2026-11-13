@@ -114,7 +114,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde; inspeção visual em `make run`
       rastreia: Req-22, Req-25, Req-29, Req-30, Critérios de Aceite (cartas desenhadas)
 
-- [ ] 10. Sessão, loop de eventos e integração com main
+- [x] 10. Sessão, loop de eventos e integração com main
       altera: `src/app/session.hpp`, `src/app/session.cpp`, `src/main.cpp`, `tests/test_session.cpp`
       consome: tarefas 1–9
       produz: `SessionState`, `class Session`, `Session::run()`
