@@ -22,12 +22,31 @@ que pede truco, corre e blefa.
   **"Passe o controle para Jogador N"**; nenhuma carta é desenhada até a confirmação. Ao final da
   mão as cartas são reveladas, como em uma mesa real.
 - **Jogar na rede local (LAN):** um jogador **hospeda** e o outro **conecta pelo IP**. Detalhes abaixo.
+- **Battle Royale online (LAN):** de 3 a 13 jogadores na mesma rede, todos com 12 pontos de vida;
+  quem chega a 0 é eliminado e vence quem sobrar. Detalhes abaixo.
+
+## Battle Royale online (LAN)
+
+1. No host: escolha **Hospedar Battle Royale**, defina o teto de jogadores (3 a 13) e a porta,
+   depois **Iniciar** com pelo menos 3 conectados. A partida começa para todos os conectados.
+2. Nos demais computadores: **Conectar Battle Royale**, informe IP e porta.
+3. Cada jogador recebe 3 cartas; a mesa joga uma carta por vaza na ordem dos assentos e a maior
+   carta leva a vaza (manilhas fixas do truco mineiro).
+4. **Pontos:** todos começam com 12. Correr de um pedido custa o valor pedido; perder a mão custa o
+   valor final da mão. Ao chegar a 0 ou menos, o jogador é eliminado.
+5. **Truco:** quem pede desafia todos os adversários em ordem. Quem aceita continua e passa a poder
+   aumentar; quem corre paga e sai da mão. O pedinte não aumenta de novo.
+6. **Fim da mão:** vence quem ganhar mais vazas; empate é desempatado pela maior carta jogada e,
+   se persistir, pela mão. Todos os demais na mão pagam o valor final.
+7. **Desconexão:** elimina o jogador sem descontar pontos; os demais seguem. Sem reconexão.
+8. O host é a autoridade: clientes só enviam intenções. Cada jogador vê apenas a própria mão; as
+   demais são reveladas ao correr, ao ser eliminado ou no fim da mão.
 
 ## Jogar na rede local (LAN)
 
-1. No computador que vai hospedar: escolha **Hospedar partida (LAN)**, confirme a porta (padrão `4000`) e
-   leia na tela o **IP local** e a porta.
-2. No outro computador, na mesma rede: escolha **Conectar em partida (LAN)**, digite o IP do host,
+1. No computador que vai hospedar: escolha **LAN → Hospedar 2 jogadores**, confirme a porta (padrão
+   `4000`) e leia na tela o **IP local** e a porta.
+2. No outro computador, na mesma rede: escolha **LAN → Conectar 2 jogadores**, digite o IP do host,
    use `Tab` para editar a porta e confirme com `Enter`.
 3. O host é o **Jogador 1** e é a autoridade da partida; o convidado é o **Jogador 2**.
 4. Cada lado recebe **apenas a própria mão**. A mão do adversário só é revelada no fim da mão ou em
@@ -65,7 +84,7 @@ TRUCO_SEED=42 ./truco
 | Cancelar seleção | — | `Esc` |
 | Pedir truco / seis / nove / doze | botão **Truco!** | `2` na tela de vez (quando disponível) |
 | Aceitar / correr | botões do diálogo | `1` aceita, `2` corre |
-| Menu | botões | `1` CPU, `2` hotseat, `3` hospedar LAN, `4` conectar LAN, `5` sair; `Enter` na opção |
+| Menu | botões | `1` CPU, `2` hotseat, `3` LAN, `4` sair; `Enter` na opção; `Esc` volta da subpágina LAN |
 | Editar IP/porta | botões | dígitos/`.`/`:`, `Backspace`, `Tab` alterna campo, `Enter` confirma, `Esc` volta |
 | Confirmar troca de jogador | botão **Continuar** | `Enter` ou `1` |
 | Sair | — | `Q` ou `Ctrl+C` |
