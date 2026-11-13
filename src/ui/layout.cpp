@@ -38,7 +38,6 @@ Layout Layout::compute(Size size, int actionCount) {
     }
 
     layout.trickArea = Rect{0, cpuY + kCardH + 2, size.cols, size.rows - 11 - (cpuY + kCardH + 2)};
-    layout.vira = Rect{size.cols - 14, cpuY + kCardH + 3, kCardW, kCardH};
 
     const int count = actionCount < 0 ? 0 : (actionCount > 4 ? 4 : actionCount);
     layout.actionCount = count;

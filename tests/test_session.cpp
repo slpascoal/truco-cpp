@@ -48,7 +48,6 @@ TEST(session_starts_dealing_then_human_turn) {
     reachHumanTurn(session);
     CHECK(session.state() == SessionState::HumanTurn);
     CHECK_EQ(session.view().humanCards.size(), size_t{3});
-    CHECK(session.view().vira.has_value());
 }
 
 TEST(session_card_needs_confirmation) {

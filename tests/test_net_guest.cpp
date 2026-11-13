@@ -89,12 +89,12 @@ TEST(guest_sends_and_receives) {
 
     guest.sendLine("HELLO TRUCO 1\n");
     Message received;
-    CHECK(pumpHostLine(host, "HELLO TRUCO 1", 1000, &received));
+    CHECK(pumpHostLine(host, "HELLO TRUCO 2", 1000, &received));
     CHECK(received.type == MessageType::Hello);
 
     host.sendLine("WELCOME 1\n");
     Message reply;
-    CHECK(pumpUntilLine(guest, "WELCOME 1", 1000, &reply));
+    CHECK(pumpUntilLine(guest, "WELCOME 2", 1000, &reply));
     CHECK(reply.type == MessageType::Welcome);
 }
 
@@ -106,12 +106,12 @@ TEST(handshake_accepts_matching_version) {
     CHECK(guest.connectTo("127.0.0.1", host.port(), 1000, error));
     CHECK(host.acceptPending());
 
-    guest.sendLine(encodeLine(MessageType::Hello, {"TRUCO", "1"}));
+    guest.sendLine(encodeLine(MessageType::Hello, {"TRUCO", "2"}));
     Message hello;
     CHECK(pumpHostLine(host, "", 1000, &hello));
     CHECK(hello.type == MessageType::Hello);
-    CHECK_EQ(hello.fields.at(1), std::string("1"));
-    host.sendLine(encodeLine(MessageType::Welcome, {"1"}));
+    CHECK_EQ(hello.fields.at(1), std::string("2"));
+    host.sendLine(encodeLine(MessageType::Welcome, {"2"}));
     Message welcome;
     CHECK(pumpUntilLine(guest, "", 1000, &welcome));
     CHECK(welcome.type == MessageType::Welcome);

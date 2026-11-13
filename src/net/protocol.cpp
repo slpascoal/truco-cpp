@@ -361,7 +361,7 @@ std::string encodeSync(const SyncState& sync) {
     line += ' ' + std::to_string(sync.scoreHuman);
     line += ' ' + std::to_string(sync.scoreCpu);
     line += ' ' + kindToken(sync.handKind);
-    line += ' ' + cardToken(sync.vira);
+    line += ' ' + std::string(sync.canRaise ? "1" : "0");
     for (int i = 0; i < 3; ++i) {
         line += ' ' + cardToken(sync.own[static_cast<size_t>(i)]);
     }
@@ -400,7 +400,9 @@ bool decodeSync(const std::string& line, SyncState& out) {
     if (!parseInt(f[7], 0, 99, sync.scoreHuman)) return false;
     if (!parseInt(f[8], 0, 99, sync.scoreCpu)) return false;
     if (!kindFromToken(f[9], sync.handKind)) return false;
-    if (!cardFromToken(f[10], sync.vira)) return false;
+    int canRaise = 0;
+    if (!parseInt(f[10], 0, 1, canRaise)) return false;
+    sync.canRaise = canRaise == 1;
     for (int i = 0; i < 3; ++i) {
         if (!cardFromToken(f[11 + static_cast<size_t>(i)],
                            sync.own[static_cast<size_t>(i)])) {

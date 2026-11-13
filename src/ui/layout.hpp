@@ -25,7 +25,6 @@ struct Layout {
     Rect cpuCards[3];
     Rect humanCards[3];
     Rect trickArea;
-    Rect vira;
     Rect actions[4];
     int actionCount = 0;
     Rect status;

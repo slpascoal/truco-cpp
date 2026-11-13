@@ -84,7 +84,7 @@ SyncState sampleSync(bool revealed) {
     sync.scoreHuman = 5;
     sync.scoreCpu = 9;
     sync.handKind = HandKind::Normal;
-    sync.vira = Card{Rank::Four, Suit::Ouros};
+    sync.canRaise = true;
     sync.own = {Card{Rank::Three, Suit::Paus}, Card{Rank::Seven, Suit::Copas},
                 Card{Rank::Ace, Suit::Espadas}};
     sync.playedOwn = {true, false, false};
@@ -113,7 +113,7 @@ TEST(protocol_sync_roundtrip_revealed) {
     CHECK_EQ(parsed.scoreHuman, original.scoreHuman);
     CHECK_EQ(parsed.scoreCpu, original.scoreCpu);
     CHECK(parsed.handKind == original.handKind);
-    CHECK(parsed.vira == original.vira);
+    CHECK_EQ(parsed.canRaise, original.canRaise);
     for (int i = 0; i < 3; ++i) {
         CHECK(parsed.own[static_cast<size_t>(i)] == original.own[static_cast<size_t>(i)]);
         CHECK_EQ(parsed.playedOwn[static_cast<size_t>(i)],

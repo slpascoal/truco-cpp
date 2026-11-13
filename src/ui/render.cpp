@@ -282,7 +282,7 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
     if (vm.screen == ViewModel::Screen::Menu) {
         centeredText(canvas, 3, size.cols, vm.title, 3);
         centeredText(canvas, 5, size.cols, vm.subtitle, 7);
-        centeredText(canvas, 8, size.cols, "Baralho de 40 cartas - manilha pela vira", 6);
+        centeredText(canvas, 8, size.cols, "Baralho de 40 cartas - manilha fixa", 6);
         centeredText(canvas, 9, size.cols, "Partida ate 12 pontos - truco, seis, nove e doze", 6);
         centeredText(canvas, 12, size.cols, "Mouse: clique nas cartas | Teclado: 1 2 3 + Enter", 7);
         centeredText(canvas, 13, size.cols, "ESC cancela a selecao | Q sai do jogo", 7);
@@ -363,14 +363,6 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
     if (!vm.message.empty()) {
         centeredText(canvas, layout.trickArea.y + layout.trickArea.h - 1, size.cols,
                      vm.message, 3);
-    }
-
-    if (vm.vira.has_value()) {
-        drawCard(canvas, layout.vira, *vm.vira, false, false, kBorder);
-        canvas.text(layout.vira.x, layout.vira.y - 1, "VIRA", 7);
-        if (!vm.manilhaText.empty()) {
-            canvas.text(layout.vira.x, layout.vira.y + 7, vm.manilhaText, 5);
-        }
     }
 
     for (int i = 0; i < 3; ++i) {

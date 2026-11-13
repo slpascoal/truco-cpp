@@ -159,7 +159,7 @@ bool Session::openLanConnectForTesting(const std::string& ip, uint16_t port) {
     mode_ = GameMode::LanGuest;
     lanHandshakeDone_ = false;
     lanMatchActive_ = false;
-    guest_->sendLine(encodeLine(MessageType::Hello, {"TRUCO", "1"}));
+    guest_->sendLine(encodeLine(MessageType::Hello, {"TRUCO", "2"}));
     state_ = SessionState::LanWaiting;
     message_ = "Conectando...";
     refreshView();
@@ -758,7 +758,7 @@ void Session::confirmLanConfig() {
     mode_ = GameMode::LanGuest;
     lanHandshakeDone_ = false;
     lanMatchActive_ = false;
-    guest_->sendLine(encodeLine(MessageType::Hello, {"TRUCO", "1"}));
+    guest_->sendLine(encodeLine(MessageType::Hello, {"TRUCO", "2"}));
     state_ = SessionState::LanWaiting;
     message_ = "Conectando...";
     refreshView();
@@ -812,9 +812,9 @@ void Session::pumpLanWaiting() {
             continue;
         }
         const bool valid = message.fields.size() >= 2 && message.fields[0] == "TRUCO" &&
-                           message.fields[1] == "1";
+                           message.fields[1] == "2";
         if (valid) {
-            host_->sendLine(encodeLine(MessageType::Welcome, {"1"}));
+            host_->sendLine(encodeLine(MessageType::Welcome, {"2"}));
             lanHandshakeDone_ = true;
             startLanHostMatch();
         } else {
@@ -862,7 +862,7 @@ void Session::pumpGuest() {
     for (const std::string& line : guest_->readLines()) {
         const Message message = parseLine(line);
         if (message.type == MessageType::Welcome) {
-            if (!message.fields.empty() && message.fields[0] == "1") {
+            if (!message.fields.empty() && message.fields[0] == "2") {
                 lanHandshakeDone_ = true;
                 message_ = "Conectado. Aguardando o host iniciar...";
                 refreshView();
@@ -1041,7 +1041,7 @@ SyncState Session::makeSync(Side viewer) const {
     sync.scoreHuman = game_.score().human;
     sync.scoreCpu = game_.score().cpu;
     sync.handKind = game_.handKind();
-    sync.vira = game_.deal().vira;
+    sync.canRaise = game_.canCallTruco(viewer);
     sync.own = game_.handOf(viewer);
     for (int i = 0; i < 3; ++i) {
         sync.playedOwn[static_cast<size_t>(i)] = game_.cardPlayed(viewer, i);
@@ -1173,7 +1173,6 @@ void Session::refreshView() {
             view_.humanPlayed[static_cast<size_t>(i)] = sync.playedOwn[static_cast<size_t>(i)];
             view_.cpuPlayed[static_cast<size_t>(i)] = sync.playedOpponent[static_cast<size_t>(i)];
         }
-        view_.vira = sync.vira;
         view_.humanTrickCard = sync.trickOwn;
         view_.cpuTrickCard = sync.trickOpponent;
         view_.humanTrickLabel = sideShortName(sync.you);
@@ -1226,7 +1225,6 @@ void Session::refreshView() {
         view_.humanPlayed[static_cast<size_t>(i)] = game_.cardPlayed(bottom, i);
         view_.cpuPlayed[static_cast<size_t>(i)] = game_.cardPlayed(top, i);
     }
-    view_.vira = game_.deal().vira;
     view_.humanTrickCard = game_.currentTrickCard(Side::Human);
     view_.cpuTrickCard = game_.currentTrickCard(Side::Cpu);
     view_.humanTrickLabel = sideShortName(Side::Human);

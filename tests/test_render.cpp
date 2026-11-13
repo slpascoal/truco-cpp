@@ -66,7 +66,6 @@ ViewModel gameView() {
                      Card{Rank::Ace, Suit::Espadas}};
     vm.cpuCards = {Card{Rank::Two, Suit::Ouros}, Card{Rank::Six, Suit::Paus},
                    Card{Rank::Queen, Suit::Copas}};
-    vm.vira = Card{Rank::Four, Suit::Ouros};
     vm.stakeText = "MAO VALE 3";
     vm.turnText = "Sua vez";
     vm.actions = {"Jogar carta", "Truco!"};
@@ -204,18 +203,18 @@ TEST(render_selected_card_and_revealed_cpu) {
     for (const std::string& line : lines) {
         CHECK(displayWidth(line) <= 80);
     }
-    CHECK(frame.find("VIRA") != std::string::npos);
+    CHECK(frame.find("VIRA") == std::string::npos);
 }
 
-TEST(render_shows_manilha_and_trick_count) {
+TEST(render_shows_trick_count_without_vira_or_manilha) {
     Terminal terminal;
     Renderer renderer(terminal);
     ViewModel vm = gameView();
-    vm.manilhaText = "MANILHA: 5";
     vm.trickText = "Vazas: voce 1 x 0 CPU";
     const std::string frame = stripAnsi(renderer.render(vm, Size{80, 24}));
-    CHECK(frame.find("MANILHA: 5") != std::string::npos);
     CHECK(frame.find("Vazas: voce 1 x 0 CPU") != std::string::npos);
+    CHECK(frame.find("VIRA") == std::string::npos);
+    CHECK(frame.find("MANILHA") == std::string::npos);
 }
 
 TEST(render_handoff_screen_hides_cards) {

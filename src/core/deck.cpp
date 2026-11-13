@@ -31,9 +31,8 @@ Deal deal(std::mt19937& rng) {
     auto deck = buildDeck();
     shuffleDeck(deck, rng);
     return Deal{
-        {deck[1], deck[2], deck[3]},
-        {deck[4], deck[5], deck[6]},
-        deck[0],
+        {deck[0], deck[1], deck[2]},
+        {deck[3], deck[4], deck[5]},
     };
 }
 

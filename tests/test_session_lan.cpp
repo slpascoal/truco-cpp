@@ -171,12 +171,12 @@ TEST(lan_host_rejects_out_of_turn_card) {
     net::GuestClient raw;
     std::string error;
     CHECK(raw.connectTo("127.0.0.1", host.lanPort(), 1000, error));
-    raw.sendLine(encodeLine(MessageType::Hello, {"TRUCO", "1"}));
+    raw.sendLine(encodeLine(MessageType::Hello, {"TRUCO", "2"}));
     for (int i = 0; i < 120 && host.state() != SessionState::HumanTurn; ++i) {
         host.advance(milliseconds(30));
     }
     CHECK(host.state() == SessionState::HumanTurn);
-    raw.sendLine(encodeLine(MessageType::Play, {"1"}));
+    raw.sendLine(encodeLine(MessageType::Play, {"2"}));
     for (int i = 0; i < 20; ++i) {
         host.advance(milliseconds(30));
     }
@@ -212,7 +212,7 @@ TEST(lan_disconnect_moves_host_to_error_screen) {
     net::GuestClient raw;
     std::string error;
     CHECK(raw.connectTo("127.0.0.1", host.lanPort(), 1000, error));
-    raw.sendLine(encodeLine(MessageType::Hello, {"TRUCO", "1"}));
+    raw.sendLine(encodeLine(MessageType::Hello, {"TRUCO", "2"}));
     for (int i = 0; i < 150 && host.state() != SessionState::HumanTurn; ++i) {
         host.advance(milliseconds(30));
     }

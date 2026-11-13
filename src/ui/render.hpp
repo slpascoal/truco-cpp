@@ -38,14 +38,12 @@ struct ViewModel {
     std::array<Card, 3> cpuCards{};
     std::array<bool, 3> cpuPlayed{};
 
-    std::optional<Card> vira;
     std::optional<Card> humanTrickCard;
     std::optional<Card> cpuTrickCard;
 
     int humanScore = 0;
     int cpuScore = 0;
     std::string stakeText;
-    std::string manilhaText;
     std::string trickText;
     std::string turnText;
     std::string message;

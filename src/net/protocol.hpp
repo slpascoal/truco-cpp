@@ -60,7 +60,7 @@ struct SyncState {
     int scoreHuman = 0;
     int scoreCpu = 0;
     HandKind handKind = HandKind::Normal;
-    Card vira{};
+    bool canRaise = false;
     std::array<Card, 3> own{};
     std::array<bool, 3> playedOwn{};
     std::array<bool, 3> playedOpponent{};
