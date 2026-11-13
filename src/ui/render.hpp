@@ -12,8 +12,26 @@
 
 namespace truco {
 
+struct RoyaleRow {
+    int seat = 0;
+    int points = 0;
+    bool eliminated = false;
+    bool inHand = false;
+    int tricks = 0;
+    std::string card;
+};
+
 struct ViewModel {
-    enum class Screen { Menu, Handoff, Game, MatchResult, LanConfig, LanWaiting, LanError };
+    enum class Screen {
+        Menu,
+        Handoff,
+        Game,
+        Royale,
+        MatchResult,
+        LanConfig,
+        LanWaiting,
+        LanError
+    };
 
     Screen screen = Screen::Menu;
     std::string title = "TRUCO MINEIRO";
@@ -58,6 +76,11 @@ struct ViewModel {
     bool showEleven = false;
     std::string elevenText;
     std::string matchResultText;
+
+    std::vector<RoyaleRow> royaleRows;
+    std::string royaleTitle;
+    std::string royaleInfo;
+    int royaleYou = 0;
 };
 
 struct HitTarget {

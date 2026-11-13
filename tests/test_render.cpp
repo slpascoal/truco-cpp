@@ -284,3 +284,55 @@ TEST(render_lan_error_screen) {
     CHECK(frame.find("Conexao perdida com o adversario") != std::string::npos);
     CHECK_EQ(renderer.hitTargets().size(), size_t{1});
 }
+
+TEST(render_royale_lists_thirteen_players_without_overflow) {
+    Terminal terminal;
+    Renderer renderer(terminal);
+    ViewModel vm;
+    vm.screen = ViewModel::Screen::Royale;
+    vm.royaleYou = 0;
+    vm.royaleTitle = "Jogadores vivos: 13/13";
+    vm.royaleInfo = "Vazas jogadas: 1";
+    vm.humanCards = {Card{Rank::Three, Suit::Paus}, Card{Rank::Seven, Suit::Copas},
+                     Card{Rank::Ace, Suit::Espadas}};
+    vm.actions = {"Jogar", "Truco!"};
+    for (int i = 0; i < 13; ++i) {
+        RoyaleRow row;
+        row.seat = i;
+        row.points = 12 - (i % 3);
+        row.eliminated = i == 12;
+        row.inHand = i != 12;
+        row.tricks = i % 2;
+        row.card = i == 0 ? "7O" : "-";
+        vm.royaleRows.push_back(row);
+    }
+    const std::string frame = stripAnsi(renderer.render(vm, Size{80, 24}));
+    CHECK(frame.find("BATTLE ROYALE") != std::string::npos);
+    CHECK(frame.find("J13") != std::string::npos);
+    CHECK(frame.find("Jogadores vivos: 13/13") != std::string::npos);
+    const std::vector<std::string> lines = splitLines(frame);
+    CHECK_EQ(lines.size(), size_t{24});
+    for (const std::string& line : lines) {
+        CHECK(displayWidth(line) <= 80);
+    }
+}
+
+TEST(render_royale_fits_wide_terminal) {
+    Terminal terminal;
+    Renderer renderer(terminal);
+    ViewModel vm;
+    vm.screen = ViewModel::Screen::Royale;
+    vm.humanCards = {Card{Rank::Two, Suit::Ouros}, Card{Rank::Six, Suit::Paus},
+                     Card{Rank::Queen, Suit::Copas}};
+    for (int i = 0; i < 13; ++i) {
+        RoyaleRow row;
+        row.seat = i;
+        row.points = 12;
+        row.inHand = true;
+        vm.royaleRows.push_back(row);
+    }
+    const std::string frame = stripAnsi(renderer.render(vm, Size{120, 40}));
+    for (const std::string& line : splitLines(frame)) {
+        CHECK(displayWidth(line) <= 120);
+    }
+}

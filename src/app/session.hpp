@@ -132,7 +132,9 @@ private:
     void resetToMenu();
 
     void openRoyaleConfig();
+    void openRoyaleJoinConfig();
     void confirmRoyaleConfig();
+    void returnToLanMenu();
     void startRoyaleMatch();
     void pumpRoyaleLobby();
     void pumpRoyaleHost();
@@ -182,6 +184,8 @@ private:
 
     TextInput royalePlayers_{"0123456789", "4"};
     int royaleMax_ = 4;
+    bool royaleConfigHost_ = true;
+    int menuPage_ = 0;
     std::unique_ptr<net::RoomServer> room_;
     std::unique_ptr<RoyaleMatch> royale_;
     std::vector<bool> royaleJoined_;

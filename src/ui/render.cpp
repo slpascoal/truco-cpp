@@ -302,13 +302,61 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
         return canvas.toString();
     }
 
-    if (vm.screen == ViewModel::Screen::MatchResult) {
-        centeredText(canvas, 4, size.cols, "FIM DE JOGO", 3);
+    if (vm.screen == ViewModel::Screen::MatchResult) {        centeredText(canvas, 4, size.cols, "FIM DE JOGO", 3);
         centeredText(canvas, 6, size.cols, vm.matchResultText, 7);
         centeredText(canvas, 8, size.cols,
                      "Voce " + std::to_string(vm.humanScore) + " x " +
                          std::to_string(vm.cpuScore) + " Computador",
                      7);
+        for (size_t i = 0; i < vm.actions.size() && i < 4; ++i) {
+            drawButton(canvas, layout.actions[i], vm.actions[i],
+                       vm.selectedAction == static_cast<int>(i));
+            hitTargets_.push_back({layout.actions[i], 100 + static_cast<int>(i)});
+        }
+        return canvas.toString();
+    }
+
+    if (vm.screen == ViewModel::Screen::Royale) {
+        canvas.text(1, 0, "BATTLE ROYALE", 7);
+        if (!vm.royaleTitle.empty()) {
+            centeredText(canvas, 1, size.cols, vm.royaleTitle, 6);
+        }
+        if (!vm.stakeText.empty()) {
+            centeredText(canvas, 2, size.cols, vm.stakeText, 5);
+        }
+        const int half = size.cols / 2;
+        const int perColumn = (static_cast<int>(vm.royaleRows.size()) + 1) / 2;
+        for (size_t i = 0; i < vm.royaleRows.size(); ++i) {
+            const RoyaleRow& row = vm.royaleRows[i];
+            const int column = static_cast<int>(i) / (perColumn > 0 ? perColumn : 1);
+            const int lineInColumn = static_cast<int>(i) % (perColumn > 0 ? perColumn : 1);
+            const int y = 3 + lineInColumn;
+            if (y >= layout.humanCards[0].y - 1) {
+                break;
+            }
+            const int x = column == 0 ? 2 : half + 1;
+            const std::string status =
+                row.eliminated ? "eliminado" : (row.inHand ? "em jogo" : "fora");
+            std::string line = "J" + std::to_string(row.seat + 1);
+            line += row.seat == vm.royaleYou ? "* " : "  ";
+            line += std::to_string(row.points) + "pts " + status;
+            line += " " + row.card + " vazas " + std::to_string(row.tricks);
+            canvas.text(x, y, line, row.seat == vm.royaleYou ? 3 : 7);
+        }
+        if (!vm.royaleInfo.empty()) {
+            canvas.text(2, layout.humanCards[0].y - 2, vm.royaleInfo, 6);
+        }
+        if (!vm.message.empty()) {
+            centeredText(canvas, layout.trickArea.y + layout.trickArea.h - 1, size.cols,
+                         vm.message, 3);
+        }
+        for (int i = 0; i < 3; ++i) {
+            const bool played = vm.humanPlayed[static_cast<size_t>(i)];
+            const bool selected = vm.selectedCard == i;
+            drawCard(canvas, layout.humanCards[i], vm.humanCards[static_cast<size_t>(i)],
+                     played, selected, played ? 4 : kBorder);
+            hitTargets_.push_back({layout.humanCards[i], i});
+        }
         for (size_t i = 0; i < vm.actions.size() && i < 4; ++i) {
             drawButton(canvas, layout.actions[i], vm.actions[i],
                        vm.selectedAction == static_cast<int>(i));

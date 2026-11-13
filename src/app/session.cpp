@@ -625,14 +625,24 @@ void Session::activateAction(int index) {
 
     switch (state_) {
         case SessionState::Menu:
-            if (index == 0 || index == 1) {
+            if (menuPage_ == 1) {
+                if (index == 0) {
+                    openLanConfig(true);
+                } else if (index == 1) {
+                    openLanConfig(false);
+                } else if (index == 2) {
+                    openRoyaleConfig();
+                } else if (index == 3) {
+                    openRoyaleJoinConfig();
+                }
+            } else if (index == 0 || index == 1) {
                 mode_ = index == 0 ? GameMode::Cpu : GameMode::Hotseat;
                 beginMatch();
             } else if (index == 2) {
-                openLanConfig(true);
+                menuPage_ = 1;
+                selectedAction_ = 0;
+                refreshView();
             } else if (index == 3) {
-                openLanConfig(false);
-            } else if (index == 4) {
                 running_ = false;
             }
             break;
@@ -1183,14 +1193,25 @@ void Session::refreshView() {
         switch (state_) {
             case SessionState::RoyaleConfig: {
                 view_.screen = ViewModel::Screen::LanConfig;
-                view_.lanTitle = "Battle Royale (LAN)";
-                view_.lanFieldLabel[0] = "Jogadores (3-13)";
-                view_.lanFieldValue[0] = royalePlayers_.value();
-                view_.lanFieldLabel[1] = "Porta";
-                view_.lanFieldValue[1] = lanPort_.value();
-                view_.lanFieldFocus = 0;
-                view_.lanHint = "Jogadores 3-13 | Enter inicia | ESC volta";
-                view_.actions = {"Hospedar", "Voltar"};
+                view_.lanTitle = royaleConfigHost_ ? "Battle Royale (hospedar)"
+                                                   : "Battle Royale (entrar)";
+                if (royaleConfigHost_) {
+                    view_.lanFieldLabel[0] = "Jogadores (3-13)";
+                    view_.lanFieldValue[0] = royalePlayers_.value();
+                    view_.lanFieldLabel[1] = "Porta";
+                    view_.lanFieldValue[1] = lanPort_.value();
+                    view_.lanFieldFocus = 0;
+                    view_.lanHint = "Jogadores 3-13 | Enter inicia | ESC volta";
+                    view_.actions = {"Hospedar", "Voltar"};
+                } else {
+                    view_.lanFieldLabel[0] = "IP do host";
+                    view_.lanFieldValue[0] = lanIp_.value();
+                    view_.lanFieldLabel[1] = "Porta";
+                    view_.lanFieldValue[1] = lanPort_.value();
+                    view_.lanFieldFocus = 0;
+                    view_.lanHint = "Tab alterna campo | Enter conecta | ESC volta";
+                    view_.actions = {"Entrar", "Voltar"};
+                }
                 break;
             }
             case SessionState::RoyaleLobby: {
@@ -1220,11 +1241,31 @@ void Session::refreshView() {
             }
             case SessionState::RoyalePlay:
             default: {
-                view_.screen = ViewModel::Screen::Game;
+                view_.screen = ViewModel::Screen::Royale;
+                view_.royaleYou = royaleHost() ? 0 : royaleSeat_;
                 if (royaleHost() && royale_) {
                     const RoyaleSeat& own = royale_->seat(0);
                     view_.humanCards = own.hand;
                     view_.humanPlayed = own.played;
+                    view_.royaleTitle = "Jogadores vivos: " +
+                                        std::to_string(royale_->aliveCount()) + "/" +
+                                        std::to_string(royale_->playerCount());
+                    view_.royaleInfo = "Vazas jogadas: " +
+                                       std::to_string(royale_->tricksPlayed());
+                    for (int seat = 0; seat < royale_->playerCount(); ++seat) {
+                        const RoyaleSeat& source = royale_->seat(seat);
+                        RoyaleRow row;
+                        row.seat = seat;
+                        row.points = source.points;
+                        row.eliminated = source.eliminated;
+                        row.inHand = source.inHand;
+                        row.tricks = source.tricksWon;
+                        row.card = source.tableCard.has_value()
+                                       ? rankLabel(source.tableCard->rank) +
+                                             suitLabel(source.tableCard->suit)
+                                       : "-";
+                        view_.royaleRows.push_back(row);
+                    }
                     view_.stakeText = "MAO VALE " +
                                       std::to_string(royale_->pendingValue());
                     view_.turnText = royale_->currentTurn() == 0
@@ -1244,6 +1285,24 @@ void Session::refreshView() {
                 } else {
                     view_.humanCards = royaleView_.own;
                     view_.humanPlayed = royaleView_.playedOwn;
+                    view_.royaleTitle = "Jogadores: " +
+                                        std::to_string(royaleView_.playerCount);
+                    view_.royaleInfo = "Vazas jogadas: " +
+                                       std::to_string(royaleView_.tricksPlayed);
+                    for (int seat = 0; seat < royaleView_.playerCount; ++seat) {
+                        const RoyaleSeatView& source =
+                            royaleView_.seats.at(static_cast<size_t>(seat));
+                        RoyaleRow row;
+                        row.seat = seat;
+                        row.points = source.points;
+                        row.eliminated = source.eliminated;
+                        row.inHand = source.inHand;
+                        row.card = source.tableCard.has_value()
+                                       ? rankLabel(source.tableCard->rank) +
+                                             suitLabel(source.tableCard->suit)
+                                       : "-";
+                        view_.royaleRows.push_back(row);
+                    }
                     view_.stakeText = "MAO VALE " + std::to_string(royaleView_.stake);
                     view_.turnText = royaleView_.turn == royaleSeat_
                                          ? "Sua vez"
@@ -1269,8 +1328,14 @@ void Session::refreshView() {
     switch (state_) {
         case SessionState::Menu:
             view_.screen = ViewModel::Screen::Menu;
-            view_.actions = {"Jogar vs CPU", "Jogar 2 jogadores", "Hospedar partida (LAN)",
-                             "Conectar em partida (LAN)", "Sair"};
+            if (menuPage_ == 1) {
+                view_.subtitle = "Rede local (LAN)";
+                view_.actions = {"Hospedar 2 jogadores", "Conectar 2 jogadores",
+                                 "Hospedar Battle Royale", "Conectar Battle Royale"};
+            } else {
+                view_.subtitle = "Voce contra o computador";
+                view_.actions = {"Jogar vs CPU", "Jogar 2 jogadores", "LAN", "Sair"};
+            }
             break;
         case SessionState::LanConfig: {
             view_.screen = ViewModel::Screen::LanConfig;
@@ -1463,6 +1528,7 @@ void Session::setRoyalePlayersForTesting(int players) {
 }
 
 void Session::openRoyaleConfig() {
+    royaleConfigHost_ = true;
     mode_ = GameMode::RoyaleHost;
     state_ = SessionState::RoyaleConfig;
     royalePlayers_.set(std::to_string(royaleMax_));
@@ -1472,7 +1538,42 @@ void Session::openRoyaleConfig() {
     refreshView();
 }
 
+void Session::openRoyaleJoinConfig() {
+    royaleConfigHost_ = false;
+    mode_ = GameMode::RoyaleGuest;
+    state_ = SessionState::RoyaleConfig;
+    lanIp_.set("");
+    lanPort_.set("4000");
+    message_.clear();
+    selectedAction_ = 0;
+    refreshView();
+}
+
+void Session::returnToLanMenu() {
+    mode_ = GameMode::Cpu;
+    state_ = SessionState::Menu;
+    menuPage_ = 1;
+    message_ = "Escolha um modo de jogo";
+    selectedAction_ = 0;
+    refreshView();
+}
+
 void Session::confirmRoyaleConfig() {
+    if (!royaleConfigHost_) {
+        uint16_t port = 0;
+        if (!parsePort(lanPort_.value(), port)) {
+            message_ = "Porta invalida: use 1 a 65535";
+            refreshView();
+            return;
+        }
+        if (lanIp_.empty()) {
+            message_ = "Informe o IP do host";
+            refreshView();
+            return;
+        }
+        openRoyaleJoinForTesting(lanIp_.value(), port);
+        return;
+    }
     int players = 0;
     for (char ch : royalePlayers_.value()) {
         if (ch < '0' || ch > '9') {
@@ -1843,7 +1944,7 @@ void Session::royaleHostAction(int index) {
             if (index == 0) {
                 confirmRoyaleConfig();
             } else {
-                resetToMenu();
+                returnToLanMenu();
             }
             break;
         case SessionState::RoyaleLobby:
@@ -1907,6 +2008,35 @@ void Session::handleEvent(const InputEvent& event) {
 
     const char key = event.key;
 
+    if (state_ == SessionState::RoyaleConfig) {
+        if (key == '\t') {
+            if (!royaleConfigHost_) {
+                lanFocus_ = lanFocus_ == 0 ? 1 : 0;
+                refreshView();
+            }
+            return;
+        }
+        if (key == '\r') {
+            confirmRoyaleConfig();
+            return;
+        }
+        if (key == 27) {
+            returnToLanMenu();
+            return;
+        }
+        TextInput& field = (royaleConfigHost_ || lanFocus_ == 1) ? lanPort_ : lanIp_;
+        if (royaleConfigHost_ && lanFocus_ == 0) {
+            if (royalePlayers_.handleKey(key)) {
+                refreshView();
+            }
+            return;
+        }
+        if (field.handleKey(key)) {
+            refreshView();
+        }
+        return;
+    }
+
     if (state_ == SessionState::LanConfig) {
         if (key == '\t') {
             if (!lanConfigHost_) {
@@ -1935,6 +2065,12 @@ void Session::handleEvent(const InputEvent& event) {
         return;
     }
     if (key == 27) {
+        if (state_ == SessionState::Menu && menuPage_ == 1) {
+            menuPage_ = 0;
+            selectedAction_ = 0;
+            refreshView();
+            return;
+        }
         cancelSelection();
         return;
     }

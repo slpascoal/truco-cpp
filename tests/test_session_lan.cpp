@@ -88,6 +88,7 @@ TEST(lan_config_rejects_invalid_port) {
     Session session(2);
     session.start();
     session.activateAction(2);
+    session.activateAction(0);
     CHECK(session.state() == SessionState::LanConfig);
     for (int i = 0; i < 6; ++i) {
         InputEvent backspace;
@@ -110,7 +111,8 @@ TEST(lan_config_rejects_invalid_port) {
 TEST(lan_config_rejects_invalid_ip) {
     Session session(3);
     session.start();
-    session.activateAction(3);
+    session.activateAction(2);
+    session.activateAction(1);
     CHECK(session.state() == SessionState::LanConfig);
     CHECK_EQ(session.view().actions.size(), size_t{2});
     const std::string ip = "999.999.999.999";
