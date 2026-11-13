@@ -138,7 +138,7 @@ arquivo fora dele exige parar e avisar.
         3. corrigir fluxo de sessão/rede sem alterar regra do motor
         4. rodar `make test` e confirmar verde
 
-- [ ] 10. README do Battle Royale
+- [x] 10. README do Battle Royale
       rastreia: R1–R24 (documentação)
       altera: README.md
       consome: comportamento de T1–T9
@@ -147,7 +147,7 @@ arquivo fora dele exige parar e avisar.
                 desconexão
       passos: reduzido (documentação, sem teste de comportamento próprio)
 
-- [ ] 11. Auditoria de diff final
+- [x] 11. Auditoria de diff final
       rastreia: todos os requisitos do spec
       altera: — (somente leitura)
       consome: commits de T1–T10

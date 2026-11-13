@@ -161,3 +161,32 @@ TEST(royale_guest_disconnect_eliminates_on_host) {
     CHECK(eliminated);
     CHECK(host.royaleMatch()->aliveCount() < 3);
 }
+
+TEST(royale_host_rejects_entry_after_start) {
+    Session host(37);
+    host.start();
+    CHECK(host.openRoyaleHostForTesting(0, 4));
+    net::GuestClient g1;
+    net::GuestClient g2;
+    joinRoyale(g1, host.royalePort());
+    joinRoyale(g2, host.royalePort());
+    pumpSession(host);
+    host.activateAction(0);
+    CHECK(host.state() == SessionState::RoyalePlay);
+
+    net::GuestClient late;
+    joinRoyale(late, host.royalePort());
+    pumpSession(host);
+    bool rejected = false;
+    for (int i = 0; i < 150 && !rejected; ++i) {
+        host.advance(milliseconds(20));
+        for (const std::string& line : late.readLines()) {
+            const Message message = parseLine(line);
+            rejected = message.type == MessageType::Error &&
+                       !message.fields.empty() && message.fields[0] == "STARTED";
+        }
+        std::this_thread::sleep_for(std::chrono::microseconds(200));
+    }
+    CHECK(rejected);
+    CHECK_EQ(host.royaleMatch()->playerCount(), 3);
+}
