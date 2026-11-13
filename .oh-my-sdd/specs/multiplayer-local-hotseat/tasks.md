@@ -19,7 +19,7 @@ Base: `.oh-my-sdd/specs/multiplayer-local-hotseat/spec.md` (validado)
 
 ## Tasks
 
-- [ ] 1. Modo de jogo, menu de três opções e nomes por modo
+- [x] 1. Modo de jogo, menu de três opções e nomes por modo
       altera: `src/app/session.{hpp,cpp}`, `tests/test_session.cpp`
       consome: `Session`, `ViewModel`
       produz: `enum class GameMode { Cpu, Hotseat }`; `void Session::setModeForTesting(GameMode)`; `std::string Session::sideName(Side) const`; menu com 3 ações
@@ -31,7 +31,7 @@ Base: `.oh-my-sdd/specs/multiplayer-local-hotseat/spec.md` (validado)
         4. `make test` verde
       rastreia: Req-01, Req-02, Req-12
 
-- [ ] 2. Estado Handoff e alternância de turnos entre humanos
+- [x] 2. Estado Handoff e alternância de turnos entre humanos
       altera: `src/app/session.{hpp,cpp}`, `tests/test_session.cpp`
       consome: tarefa 1
       produz: `SessionState::Handoff`; `activeSide_`, `pendingSide_`, `confirmHandoff()`; ações genéricas por lado
@@ -43,7 +43,7 @@ Base: `.oh-my-sdd/specs/multiplayer-local-hotseat/spec.md` (validado)
         4. `make test` verde
       rastreia: Req-03, Req-04, Req-05, Req-11
 
-- [ ] 3. Truco e resposta com handoff entre humanos
+- [x] 3. Truco e resposta com handoff entre humanos
       altera: `src/app/session.{hpp,cpp}`, `tests/test_session.cpp`
       consome: tarefa 2
       produz: fluxo `TrucoDialog` precedido de `Handoff` quando o respondente é o outro lado; mensagens com nomes
@@ -55,7 +55,7 @@ Base: `.oh-my-sdd/specs/multiplayer-local-hotseat/spec.md` (validado)
         4. `make test` verde
       rastreia: Req-06, Req-05
 
-- [ ] 4. Mão de 11 e mão de ferro em hotseat
+- [x] 4. Mão de 11 e mão de ferro em hotseat
       altera: `src/app/session.{hpp,cpp}`, `tests/test_session.cpp`
       consome: tarefas 1–3
       produz: `Session::setScoreForTesting(GameScore)`; fluxo ciente do lado em `ElevenChoice` com `Handoff` prévio; resultado nomeado
@@ -67,7 +67,7 @@ Base: `.oh-my-sdd/specs/multiplayer-local-hotseat/spec.md` (validado)
         4. `make test` verde
       rastreia: Req-07, Req-08, Req-09, Req-10
 
-- [ ] 5. Tela de troca e privacidade visual
+- [x] 5. Tela de troca e privacidade visual
       altera: `src/ui/render.{hpp,cpp}`, `src/app/session.cpp`, `tests/test_render.cpp`
       consome: tarefa 2
       produz: `ViewModel::Screen::Handoff`; renderização com nome do próximo jogador, instrução de confirmação e sem cartas
@@ -79,7 +79,7 @@ Base: `.oh-my-sdd/specs/multiplayer-local-hotseat/spec.md` (validado)
         4. `make test` verde
       rastreia: Req-03, Req-04, Req-11
 
-- [ ] 6. Partida hotseat completa e regressão do modo CPU
+- [x] 6. Partida hotseat completa e regressão do modo CPU
       altera: `tests/test_session.cpp`
       consome: tarefas 1–5
       produz: teste de integração de partida hotseat completa até `MatchResult`
@@ -91,7 +91,7 @@ Base: `.oh-my-sdd/specs/multiplayer-local-hotseat/spec.md` (validado)
         4. `make test` verde
       rastreia: Critérios de Aceite (partida completa, modo CPU intacto)
 
-- [ ] 7. README do modo 2 jogadores
+- [x] 7. README do modo 2 jogadores
       altera: `README.md`
       consome: tarefas 1–6
       produz: seção de controles/menu do hotseat e nota de privacidade da tela de troca

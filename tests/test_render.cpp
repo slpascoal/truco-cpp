@@ -217,3 +217,21 @@ TEST(render_shows_manilha_and_trick_count) {
     CHECK(frame.find("MANILHA: 5") != std::string::npos);
     CHECK(frame.find("Vazas: voce 1 x 0 CPU") != std::string::npos);
 }
+
+TEST(render_handoff_screen_hides_cards) {
+    Terminal terminal;
+    Renderer renderer(terminal);
+    ViewModel vm;
+    vm.screen = ViewModel::Screen::Handoff;
+    vm.handoffTitle = "Passe o controle para Jogador 2";
+    vm.handoffText = "Passe o controle para Jogador 2";
+    vm.actions = {"Continuar"};
+    const std::string frame = stripAnsi(renderer.render(vm, Size{80, 24}));
+    CHECK(frame.find("Passe o controle para Jogador 2") != std::string::npos);
+    CHECK(frame.find("Continuar") != std::string::npos);
+    CHECK(frame.find("VIRA") == std::string::npos);
+    CHECK(frame.find("+-------+") == std::string::npos);
+    for (const std::string& line : splitLines(frame)) {
+        CHECK(displayWidth(line) <= 80);
+    }
+}

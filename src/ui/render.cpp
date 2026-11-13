@@ -212,6 +212,19 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
 
     const Layout layout = Layout::compute(size, static_cast<int>(vm.actions.size()));
 
+    if (vm.screen == ViewModel::Screen::Handoff) {
+        centeredText(canvas, 5, size.cols, vm.title, 3);
+        centeredText(canvas, 8, size.cols, vm.handoffTitle, 5);
+        centeredText(canvas, 10, size.cols, vm.handoffText, 7);
+        centeredText(canvas, 13, size.cols, "As cartas ficam ocultas ate voce confirmar.", 7);
+        for (size_t i = 0; i < vm.actions.size() && i < 4; ++i) {
+            drawButton(canvas, layout.actions[i], vm.actions[i],
+                       vm.selectedAction == static_cast<int>(i));
+            hitTargets_.push_back({layout.actions[i], 100 + static_cast<int>(i)});
+        }
+        return canvas.toString();
+    }
+
     if (vm.screen == ViewModel::Screen::Menu) {
         centeredText(canvas, 3, size.cols, vm.title, 3);
         centeredText(canvas, 5, size.cols, vm.subtitle, 7);
@@ -251,10 +264,12 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
     }
 
     // Game screen.
-    canvas.text(1, 0, "VOCE", 7);
-    canvas.text(size.cols - 11, 0, "COMPUTADOR", 7);
-    canvas.text(6, 0, std::to_string(vm.humanScore), 3);
-    canvas.text(size.cols - 13, 0, std::to_string(vm.cpuScore), 3);
+    canvas.text(1, 0, vm.humanLabel, 7);
+    const int cpuLabelX = size.cols - 2 - static_cast<int>(vm.cpuLabel.size());
+    canvas.text(cpuLabelX, 0, vm.cpuLabel, 7);
+    canvas.text(2 + static_cast<int>(vm.humanLabel.size()), 0,
+                std::to_string(vm.humanScore), 3);
+    canvas.text(cpuLabelX - 3, 0, std::to_string(vm.cpuScore), 3);
     if (!vm.stakeText.empty()) {
         centeredText(canvas, 1, size.cols, vm.stakeText, 5);
     }
@@ -278,12 +293,14 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
         const Rect area = layout.trickArea;
         const int chipRow = area.y + std::max(0, area.h / 2 - 1);
         if (vm.cpuTrickCard.has_value()) {
-            canvas.text(2, chipRow, "CPU: " + rankLabel(vm.cpuTrickCard->rank) +
+            canvas.text(2, chipRow, vm.cpuTrickLabel + ": " +
+                                        rankLabel(vm.cpuTrickCard->rank) +
                                         suitLabel(vm.cpuTrickCard->suit),
                         suitColor(vm.cpuTrickCard->suit));
         }
         if (vm.humanTrickCard.has_value()) {
-            const std::string chip = "VOCE: " + rankLabel(vm.humanTrickCard->rank) +
+            const std::string chip = vm.humanTrickLabel + ": " +
+                                     rankLabel(vm.humanTrickCard->rank) +
                                      suitLabel(vm.humanTrickCard->suit);
             canvas.text(size.cols - static_cast<int>(chip.size()) - 3, chipRow, chip,
                         suitColor(vm.humanTrickCard->suit));

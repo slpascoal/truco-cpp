@@ -13,11 +13,17 @@
 namespace truco {
 
 struct ViewModel {
-    enum class Screen { Menu, Game, MatchResult };
+    enum class Screen { Menu, Handoff, Game, MatchResult };
 
     Screen screen = Screen::Menu;
     std::string title = "TRUCO MINEIRO";
     std::string subtitle = "Voce contra o computador";
+    std::string humanLabel = "VOCE";
+    std::string cpuLabel = "COMPUTADOR";
+    std::string handoffTitle;
+    std::string handoffText;
+    std::string humanTrickLabel = "VOCE";
+    std::string cpuTrickLabel = "CPU";
 
     std::array<Card, 3> humanCards{};
     std::array<bool, 3> humanPlayed{};

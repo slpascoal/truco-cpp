@@ -11,8 +11,11 @@
 
 namespace truco {
 
+enum class GameMode { Cpu, Hotseat };
+
 enum class SessionState {
     Menu,
+    Handoff,
     Dealing,
     HumanTurn,
     CpuTurn,
@@ -36,25 +39,42 @@ public:
 
     const ViewModel& view() const { return view_; }
     SessionState state() const { return state_; }
+    GameMode mode() const { return mode_; }
+    Side activeSide() const { return activeSide_; }
     bool running() const { return running_; }
     bool mouseWarning() const { return mouseWarning_; }
     void setMouseWarning(bool value);
     const Game& game() const { return game_; }
 
+    std::string sideName(Side side) const;
+    std::string sideShortName(Side side) const;
+
     void selectCard(int index);
     void confirmSelection();
     void cancelSelection();
+    void confirmHandoff();
     void activateAction(int index);
+
+    void setModeForTesting(GameMode mode);
+    void setScoreForTesting(GameScore score);
+    void beginHotseatWithScoreForTesting(GameScore score);
 
     std::chrono::steady_clock::time_point now() const { return now_; }
 
 private:
+    enum class HandoffPurpose { Turn, TrucoAnswer, ElevenChoice };
+
+    bool hotseat() const { return mode_ == GameMode::Hotseat; }
+    bool canSelectCards() const;
     void beginMatch();
     void enterHandStart();
     void beginTurn();
     void endHand();
+    void requestHandoff(Side next, HandoffPurpose purpose, const std::string& text);
+    void enterTurnSide(Side side);
+    void enterElevenSide(Side side);
     void handleCpuTurn();
-    void humanPlays(int index);
+    void playForSide(Side side, int index);
     void refreshView();
     bool humanMustAnswerTruco() const;
     PublicView buildCpuView() const;
@@ -64,6 +84,11 @@ private:
     Game game_;
 
     SessionState state_ = SessionState::Menu;
+    GameMode mode_ = GameMode::Cpu;
+    Side activeSide_ = Side::Human;
+    Side pendingSide_ = Side::Human;
+    HandoffPurpose handoffPurpose_ = HandoffPurpose::Turn;
+    bool handoffDoneThisHand_ = false;
     std::chrono::steady_clock::time_point now_{};
     std::chrono::steady_clock::time_point until_{};
     bool running_ = true;
