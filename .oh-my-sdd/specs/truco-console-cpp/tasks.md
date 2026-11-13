@@ -54,7 +54,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde
       rastreia: Req-07, Req-08, Req-09
 
-- [ ] 5. Escala de aposta
+- [x] 5. Escala de aposta
       altera: `src/core/hand_value.hpp`, `src/core/hand_value.cpp`, `tests/test_hand_value.cpp`
       consome: —
       produz: `enum class Stake`, `nextStake`, `canRaise`, `valueAfterAccept`, `callLabel`, `valuePoints`
@@ -66,7 +66,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde
       rastreia: Req-12, Req-15
 
-- [ ] 6. Motor de partida: mãos, truco, corre, mão de 11 e ferro
+- [x] 6. Motor de partida: mãos, truco, corre, mão de 11 e ferro
       altera: `src/core/game.hpp`, `src/core/game.cpp`, `tests/test_game.cpp`
       consome: tarefas 2–5
       produz: `HandKind`, `GameScore`, `class Game` com API do plan §2
