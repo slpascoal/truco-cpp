@@ -21,7 +21,21 @@ que pede truco, corre e blefa.
   cada turno (e antes de responder truco ou decidir a mão de 11) aparece a tela
   **"Passe o controle para Jogador N"**; nenhuma carta é desenhada até a confirmação. Ao final da
   mão as cartas são reveladas, como em uma mesa real.
-- A LAN/online fica para uma versão futura.
+- **Jogar na rede local (LAN):** um jogador **hospeda** e o outro **conecta pelo IP**. Detalhes abaixo.
+
+## Jogar na rede local (LAN)
+
+1. No computador que vai hospedar: escolha **Hospedar partida (LAN)**, confirme a porta (padrão `4000`) e
+   leia na tela o **IP local** e a porta.
+2. No outro computador, na mesma rede: escolha **Conectar em partida (LAN)**, digite o IP do host,
+   use `Tab` para editar a porta e confirme com `Enter`.
+3. O host é o **Jogador 1** e é a autoridade da partida; o convidado é o **Jogador 2**.
+4. Cada lado recebe **apenas a própria mão**. A mão do adversário só é revelada no fim da mão ou em
+   corrida de truco.
+5. Se a conexão cair, os dois lados mostram **Conexao encerrada** e voltam ao menu. Não há reconexão.
+
+Observações: rede local confiável, **sem criptografia**; libere a porta no firewall do host se
+necessário. A partida começa assim que o convidado conecta e o handshake de versão é validado.
 
 ## Requisitos
 
@@ -51,7 +65,8 @@ TRUCO_SEED=42 ./truco
 | Cancelar seleção | — | `Esc` |
 | Pedir truco / seis / nove / doze | botão **Truco!** | `2` na tela de vez (quando disponível) |
 | Aceitar / correr | botões do diálogo | `1` aceita, `2` corre |
-| Menu e tela final | botões | `1` CPU, `2` hotseat, `3` sair; `Enter` na opção selecionada |
+| Menu | botões | `1` CPU, `2` hotseat, `3` hospedar LAN, `4` conectar LAN, `5` sair; `Enter` na opção |
+| Editar IP/porta | botões | dígitos/`.`/`:`, `Backspace`, `Tab` alterna campo, `Enter` confirma, `Esc` volta |
 | Confirmar troca de jogador | botão **Continuar** | `Enter` ou `1` |
 | Sair | — | `Q` ou `Ctrl+C` |
 
@@ -95,13 +110,14 @@ tests/      suíte de testes com asserts, sem framework
 
 ## Testes
 
-`make test` roda cerca de 980 verificações cobrindo força das cartas, manilha, distribuição, vazas,
+`make test` roda cerca de 1300 verificações cobrindo força das cartas, manilha, distribuição, vazas,
 empates, escala de truco, corre, mão de 11, mão de ferro, IA, parser de mouse SGR/X10, layout,
 renderização, resize e uma partida completa simulada até 12 pontos.
 
 ## Limitações
 
-- Não há multiplayer, persistência de partidas, áudio ou configuração de dificuldade.
+- A LAN é local (mesma rede), sem internet/WAN, TLS, reconexão, espectadores ou chat.
+- Não há persistência de partidas, áudio ou configuração de dificuldade.
 - Windows não é suportado.
 - O jogo depende de terminal interativo; redirecionar stdin/saída padrão desativa o modo raw e o
   mouse.

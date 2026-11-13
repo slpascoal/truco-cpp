@@ -114,7 +114,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
         4. `make test` verde
       rastreia: Critérios de Aceite (partida completa, privacidade, desconexão indireta)
 
-- [ ] 10. README de LAN
+- [x] 10. README de LAN
       altera: `README.md`
       consome: tarefas 1–9
       produz: seção "Jogar na rede local" (host, IP, porta, firewall, privacidade, limitações)
@@ -122,7 +122,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
       passos: reduzido (documentação) — justificativa: sem lógica testável
       rastreia: Req-01–Req-05
 
-- [ ] 11. Auditoria de diff
+- [x] 11. Auditoria de diff
       altera: —
       consome: commits das tarefas 1–10
       produz: relatório de conformidade escopo × diff
