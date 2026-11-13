@@ -161,3 +161,27 @@ TEST(session_full_match_reaches_result) {
     CHECK(session.game().matchOver());
     CHECK_EQ(session.view().actions.size(), size_t{2});
 }
+
+TEST(session_resize_event_keeps_state) {
+    Session session(16);
+    session.start();
+    reachHumanTurn(session);
+    const SessionState before = session.state();
+    const int humanScore = session.view().humanScore;
+    InputEvent resize;
+    resize.kind = InputEvent::Kind::Resize;
+    session.handleEvent(resize);
+    CHECK(session.state() == before);
+    CHECK_EQ(session.view().humanScore, humanScore);
+}
+
+TEST(session_dealing_animation_state_is_visible) {
+    Session session(17);
+    session.start();
+    session.activateAction(0);
+    CHECK(session.state() == SessionState::Dealing);
+    session.advance(milliseconds(100));
+    CHECK(session.state() == SessionState::Dealing);
+    session.advance(milliseconds(1000));
+    CHECK(session.state() == SessionState::HumanTurn);
+}

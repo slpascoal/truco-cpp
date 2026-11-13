@@ -175,3 +175,32 @@ TEST(layout_card_rects_do_not_overlap) {
         }
     }
 }
+
+TEST(render_match_result_screen) {
+    Terminal terminal;
+    Renderer renderer(terminal);
+    ViewModel vm;
+    vm.screen = ViewModel::Screen::MatchResult;
+    vm.matchResultText = "Voce venceu a partida!";
+    vm.humanScore = 12;
+    vm.cpuScore = 9;
+    vm.actions = {"Jogar novamente", "Sair"};
+    const std::string frame = stripAnsi(renderer.render(vm, Size{80, 24}));
+    CHECK(frame.find("FIM DE JOGO") != std::string::npos);
+    CHECK(frame.find("Voce venceu a partida!") != std::string::npos);
+    CHECK(renderer.hitTargets().size() >= 2);
+}
+
+TEST(render_selected_card_and_revealed_cpu) {
+    Terminal terminal;
+    Renderer renderer(terminal);
+    ViewModel vm = gameView();
+    vm.selectedCard = 1;
+    vm.revealCpu = true;
+    const std::string frame = stripAnsi(renderer.render(vm, Size{80, 24}));
+    const std::vector<std::string> lines = splitLines(frame);
+    for (const std::string& line : lines) {
+        CHECK(displayWidth(line) <= 80);
+    }
+    CHECK(frame.find("VIRA") != std::string::npos);
+}

@@ -126,7 +126,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde; `make run` partida manual curta
       rastreia: Req-21, Req-23, Req-27, transições do plan §1
 
-- [ ] 11. Polimento de UX: animações, menus, ajuda, min-size e resize
+- [x] 11. Polimento de UX: animações, menus, ajuda, min-size e resize
       altera: `src/app/session.cpp`, `src/ui/render.cpp`, `src/ui/layout.cpp`, `src/ui/terminal.cpp`
       consome: tarefas 8–10
       produz: telas Menu/Resultado completas, animação de distribuição/revelação, aviso de min-size, redesenho em resize
