@@ -90,7 +90,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde
       rastreia: Req-32, Req-33, Req-34, Req-35, Req-36
 
-- [ ] 8. Terminal RAII, parser de entrada e mouse SGR
+- [x] 8. Terminal RAII, parser de entrada e mouse SGR
       altera: `src/ui/terminal.hpp`, `src/ui/terminal.cpp`, `src/ui/input.hpp`, `src/ui/input.cpp`, `tests/test_input.cpp`
       consome: —
       produz: `class Terminal`, `struct InputEvent`, `parseInput`, `pollEvent`, `struct Size`

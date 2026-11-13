@@ -31,8 +31,8 @@ struct TestReg {
 #define CHECK_EQ(a, b)                                                           \
     do {                                                                         \
         ++g_checks;                                                              \
-        const auto& _a = (a);                                                    \
-        const auto& _b = (b);                                                    \
+        const auto _a = (a);                                                     \
+        const auto _b = (b);                                                    \
         if (!(_a == _b)) {                                                       \
             ++g_failures;                                                        \
             std::printf("FAIL %s:%d: %s == %s\n", __FILE__, __LINE__, #a, #b);   \
@@ -42,8 +42,8 @@ struct TestReg {
 #define CHECK_NE(a, b)                                                           \
     do {                                                                         \
         ++g_checks;                                                              \
-        const auto& _a = (a);                                                    \
-        const auto& _b = (b);                                                    \
+        const auto _a = (a);                                                     \
+        const auto _b = (b);                                                    \
         if (_a == _b) {                                                          \
             ++g_failures;                                                        \
             std::printf("FAIL %s:%d: %s != %s\n", __FILE__, __LINE__, #a, #b);   \
