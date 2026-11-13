@@ -8,6 +8,7 @@
 
 #include "core/card.hpp"
 #include "core/game.hpp"
+#include "core/royale.hpp"
 
 namespace truco {
 
@@ -25,6 +26,10 @@ enum class MessageType {
     Run,
     Eleven,
     Rematch,
+    Join,
+    Lobby,
+    Start,
+    RState,
     Unknown
 };
 
@@ -75,5 +80,39 @@ struct SyncState {
 // revealed is true; the encoder has no other path to those cards.
 std::string encodeSync(const SyncState& sync);
 bool decodeSync(const std::string& line, SyncState& out);
+
+std::string royalePhaseToken(RoyalePhase phase);
+bool royalePhaseFromToken(const std::string& token, RoyalePhase& out);
+
+struct RoyaleSeatView {
+    int points = kRoyaleStartPoints;
+    bool eliminated = false;
+    bool inHand = false;
+    std::optional<Card> tableCard;
+    std::optional<std::array<Card, 3>> revealed;
+};
+
+struct RoyaleView {
+    uint32_t seq = 0;
+    int you = 0;
+    RoyalePhase phase = RoyalePhase::Playing;
+    int turn = -1;
+    int stake = 1;
+    int caller = -1;
+    int responder = -1;
+    int handWinner = -1;
+    int matchWinner = -1;
+    int tricksPlayed = 0;
+    int playerCount = 0;
+    std::array<RoyaleSeatView, kRoyaleMaxPlayers> seats{};
+    std::array<Card, 3> own{};
+    std::array<bool, 3> playedOwn{};
+};
+
+std::string encodeRoyaleState(const RoyaleView& view);
+bool decodeRoyaleState(const std::string& line, RoyaleView& out);
+
+std::string encodeLobby(const std::vector<std::string>& names);
+bool decodeLobby(const std::string& line, std::vector<std::string>& names);
 
 }  // namespace truco

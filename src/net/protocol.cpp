@@ -16,7 +16,9 @@ constexpr TypeEntry kTypes[] = {
     {"MSG", MessageType::Msg},     {"PLAY", MessageType::Play},
     {"TRUCO", MessageType::Truco}, {"ACCEPT", MessageType::Accept},
     {"RUN", MessageType::Run},     {"ELEVEN", MessageType::Eleven},
-    {"REMATCH", MessageType::Rematch},
+    {"REMATCH", MessageType::Rematch}, {"JOIN", MessageType::Join},
+    {"LOBBY", MessageType::Lobby}, {"START", MessageType::Start},
+    {"RSTATE", MessageType::RState},
 };
 
 const char* typeToken(MessageType type) {
@@ -84,6 +86,25 @@ bool parseInt(const std::string& token, int min, int max, int& out) {
     }
     out = value;
     return true;
+}
+
+bool parseSigned(const std::string& token, int min, int max, int& out) {
+    if (token.empty()) {
+        return false;
+    }
+    if (token[0] == '-') {
+        int value = 0;
+        if (!parseInt(token.substr(1), 0, 99, value)) {
+            return false;
+        }
+        value = -value;
+        if (value < min || value > max) {
+            return false;
+        }
+        out = value;
+        return true;
+    }
+    return parseInt(token, min, max, out);
 }
 
 std::string kindToken(HandKind kind) {
@@ -428,6 +449,164 @@ bool decodeSync(const std::string& line, SyncState& out) {
         }
     }
     out = sync;
+    return true;
+}
+
+std::string royalePhaseToken(RoyalePhase phase) {
+    switch (phase) {
+        case RoyalePhase::Playing:
+            return "PLAY";
+        case RoyalePhase::TrucoAnswer:
+            return "TRUCO_ANSWER";
+        case RoyalePhase::HandEnd:
+            return "HANDEND";
+        case RoyalePhase::MatchEnd:
+            return "MATCHEND";
+    }
+    return "PLAY";
+}
+
+bool royalePhaseFromToken(const std::string& token, RoyalePhase& out) {
+    if (token == "PLAY") {
+        out = RoyalePhase::Playing;
+        return true;
+    }
+    if (token == "TRUCO_ANSWER") {
+        out = RoyalePhase::TrucoAnswer;
+        return true;
+    }
+    if (token == "HANDEND") {
+        out = RoyalePhase::HandEnd;
+        return true;
+    }
+    if (token == "MATCHEND") {
+        out = RoyalePhase::MatchEnd;
+        return true;
+    }
+    return false;
+}
+
+std::string encodeRoyaleState(const RoyaleView& view) {
+    std::string line = "RSTATE";
+    line += ' ' + std::to_string(view.seq);
+    line += ' ' + std::to_string(view.you);
+    line += ' ' + royalePhaseToken(view.phase);
+    line += ' ' + std::to_string(view.turn);
+    line += ' ' + std::to_string(view.stake);
+    line += ' ' + std::to_string(view.caller);
+    line += ' ' + std::to_string(view.responder);
+    line += ' ' + std::to_string(view.handWinner);
+    line += ' ' + std::to_string(view.matchWinner);
+    line += ' ' + std::to_string(view.tricksPlayed);
+    line += ' ' + std::to_string(view.playerCount);
+    for (int i = 0; i < view.playerCount; ++i) {
+        const RoyaleSeatView& seat = view.seats.at(static_cast<size_t>(i));
+        line += ' ' + std::to_string(seat.points);
+        line += ' ' + std::string(seat.eliminated ? "1" : "0");
+        line += ' ' + std::string(seat.inHand ? "1" : "0");
+        line += ' ' + trickToken(seat.tableCard);
+        if (seat.revealed.has_value()) {
+            line += " 1";
+            for (int card = 0; card < 3; ++card) {
+                line += ' ' + cardToken(seat.revealed->at(static_cast<size_t>(card)));
+            }
+        } else {
+            line += " 0 - - -";
+        }
+    }
+    for (int card = 0; card < 3; ++card) {
+        line += ' ' + cardToken(view.own.at(static_cast<size_t>(card)));
+    }
+    line += ' ' + maskToken(view.playedOwn);
+    line += '\n';
+    return line;
+}
+
+bool decodeRoyaleState(const std::string& line, RoyaleView& out) {
+    const Message message = parseLine(line);
+    if (message.type != MessageType::RState) {
+        return false;
+    }
+    const std::vector<std::string>& f = message.fields;
+    RoyaleView view;
+    size_t index = 0;
+    int value = 0;
+    if (f.size() < 11 || !parseInt(f[index++], 0, 999999, value)) return false;
+    view.seq = static_cast<uint32_t>(value);
+    if (!parseInt(f[index++], 0, kRoyaleMaxPlayers - 1, view.you)) return false;
+    if (!royalePhaseFromToken(f[index++], view.phase)) return false;
+    if (!parseSigned(f[index++], -1, kRoyaleMaxPlayers - 1, view.turn)) return false;
+    if (!parseInt(f[index++], 1, 12, view.stake)) return false;
+    if (!parseSigned(f[index++], -1, kRoyaleMaxPlayers - 1, view.caller)) return false;
+    if (!parseSigned(f[index++], -1, kRoyaleMaxPlayers - 1, view.responder)) return false;
+    if (!parseSigned(f[index++], -1, kRoyaleMaxPlayers - 1, view.handWinner)) return false;
+    if (!parseSigned(f[index++], -1, kRoyaleMaxPlayers - 1, view.matchWinner)) return false;
+    if (!parseInt(f[index++], 0, 3, view.tricksPlayed)) return false;
+    if (!parseInt(f[index++], 3, kRoyaleMaxPlayers, view.playerCount)) return false;
+
+    for (int i = 0; i < view.playerCount; ++i) {
+        RoyaleSeatView& seat = view.seats.at(static_cast<size_t>(i));
+        if (index >= f.size()) return false;
+        if (!parseSigned(f[index++], -99, 99, seat.points)) return false;
+        int flag = 0;
+        if (index >= f.size() || !parseInt(f[index++], 0, 1, flag)) return false;
+        seat.eliminated = flag == 1;
+        if (index >= f.size() || !parseInt(f[index++], 0, 1, flag)) return false;
+        seat.inHand = flag == 1;
+        if (index >= f.size() || !parseTrick(f[index++], seat.tableCard)) return false;
+        if (index >= f.size() || !parseInt(f[index++], 0, 1, flag)) return false;
+        if (flag == 1) {
+            std::array<Card, 3> cards{};
+            for (int card = 0; card < 3; ++card) {
+                if (index >= f.size() ||
+                    !cardFromToken(f[index++], cards.at(static_cast<size_t>(card)))) {
+                    return false;
+                }
+            }
+            seat.revealed = cards;
+        } else {
+            for (int card = 0; card < 3; ++card) {
+                if (index >= f.size() || f[index++] != "-") {
+                    return false;
+                }
+            }
+        }
+    }
+    for (int card = 0; card < 3; ++card) {
+        if (index >= f.size() || !cardFromToken(f[index++], view.own.at(static_cast<size_t>(card)))) {
+            return false;
+        }
+    }
+    if (index >= f.size() || !parseMask(f[index++], view.playedOwn)) return false;
+    if (index != f.size()) {
+        return false;
+    }
+    out = view;
+    return true;
+}
+
+std::string encodeLobby(const std::vector<std::string>& names) {
+    std::string line = "LOBBY " + std::to_string(names.size());
+    for (const std::string& name : names) {
+        line += ' ' + name;
+    }
+    line += '\n';
+    return line;
+}
+
+bool decodeLobby(const std::string& line, std::vector<std::string>& names) {
+    const Message message = parseLine(line);
+    if (message.type != MessageType::Lobby || message.fields.empty()) {
+        return false;
+    }
+    int count = 0;
+    if (!parseInt(message.fields.at(0), 0, kRoyaleMaxPlayers, count)) {
+        return false;
+    }
+    if (static_cast<int>(message.fields.size()) != count + 1) {
+        return false;
+    }
+    names.assign(message.fields.begin() + 1, message.fields.end());
     return true;
 }
 
