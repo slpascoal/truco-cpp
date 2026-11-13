@@ -14,7 +14,6 @@ struct PublicView {
     std::array<Card, 3> hand;
     std::array<bool, 3> played{};
     std::optional<Card> opponentCardInTrick;
-    Card vira{Rank::Four, Suit::Ouros};
     Stake stake = Stake::One;
     HandProgress progress{Side::Human};
     GameScore score;
@@ -28,6 +27,6 @@ bool shouldCallTruco(const PublicView& view, std::mt19937& rng);
 
 bool shouldAcceptTruco(const PublicView& view, std::mt19937& rng);
 
-bool shouldPlayHandOfEleven(Card hidden, Rank vira, std::mt19937& rng);
+bool shouldPlayHandOfEleven(Card hidden, std::mt19937& rng);
 
 }  // namespace truco

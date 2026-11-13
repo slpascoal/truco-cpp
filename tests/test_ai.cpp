@@ -8,10 +8,9 @@ using namespace truco;
 
 namespace {
 
-PublicView baseView(std::array<Card, 3> hand, Rank vira) {
+PublicView baseView(std::array<Card, 3> hand) {
     PublicView view;
     view.hand = hand;
-    view.vira = Card{vira, Suit::Ouros};
     view.turn = Side::Cpu;
     return view;
 }
@@ -37,10 +36,8 @@ int countAccepts(const PublicView& view, unsigned seed, int rounds) {
 }  // namespace
 
 TEST(ai_chooses_legal_card) {
-    const Rank vira = Rank::Four;
     PublicView view = baseView(
-        {Card{Rank::Three, Suit::Paus}, Card{Rank::Five, Suit::Paus}, Card{Rank::Four, Suit::Ouros}},
-        vira);
+        {Card{Rank::Three, Suit::Paus}, Card{Rank::Five, Suit::Paus}, Card{Rank::Four, Suit::Ouros}});
     view.played = {true, false, false};
     std::mt19937 rng(1);
     for (int i = 0; i < 20; ++i) {
@@ -51,22 +48,18 @@ TEST(ai_chooses_legal_card) {
 }
 
 TEST(ai_wins_cheaply_when_opponent_played_low) {
-    const Rank vira = Rank::Four;
     PublicView view = baseView(
-        {Card{Rank::Three, Suit::Paus}, Card{Rank::Five, Suit::Copas}, Card{Rank::Six, Suit::Ouros}},
-        vira);
+        {Card{Rank::Three, Suit::Paus}, Card{Rank::Five, Suit::Copas}, Card{Rank::Six, Suit::Ouros}});
     view.played = {false, false, false};
     view.opponentCardInTrick = Card{Rank::Four, Suit::Ouros};
     std::mt19937 rng(2);
     const int idx = chooseCardIndex(view, rng);
-    CHECK_EQ(idx, 2);  // 6♦ is the weakest card that beats 4♦
+    CHECK_EQ(idx, 1);  // 5♣ is the weakest card that beats 4♦
 }
 
 TEST(ai_throws_weakest_when_cannot_win) {
-    const Rank vira = Rank::Four;
     PublicView view = baseView(
-        {Card{Rank::Six, Suit::Ouros}, Card{Rank::Seven, Suit::Ouros}, Card{Rank::Queen, Suit::Copas}},
-        vira);
+        {Card{Rank::Six, Suit::Ouros}, Card{Rank::Seven, Suit::Paus}, Card{Rank::Queen, Suit::Copas}});
     view.played = {false, false, false};
     view.opponentCardInTrick = Card{Rank::Three, Suit::Paus};
     std::mt19937 rng(3);
@@ -75,23 +68,18 @@ TEST(ai_throws_weakest_when_cannot_win) {
 }
 
 TEST(ai_leads_low_when_leading) {
-    const Rank vira = Rank::Four;
     PublicView view = baseView(
-        {Card{Rank::Three, Suit::Paus}, Card{Rank::Four, Suit::Ouros}, Card{Rank::Seven, Suit::Ouros}},
-        vira);
+        {Card{Rank::Three, Suit::Paus}, Card{Rank::Four, Suit::Ouros}, Card{Rank::Seven, Suit::Ouros}});
     std::mt19937 rng(4);
     const int idx = chooseCardIndex(view, rng);
-    CHECK_EQ(idx, 1);  // 4♦ is the weakest non-manilha... 4 < 7, and 4 is not manilha
+    CHECK_EQ(idx, 1);  // 4♦ is the weakest non-manilha (7♦ is a fixed manilha)
 }
 
 TEST(ai_strong_hand_calls_truco_more_than_weak) {
-    const Rank vira = Rank::Four;
     PublicView strong = baseView(
-        {Card{Rank::Five, Suit::Paus}, Card{Rank::Five, Suit::Copas}, Card{Rank::Three, Suit::Paus}},
-        vira);
+        {Card{Rank::Four, Suit::Paus}, Card{Rank::Seven, Suit::Copas}, Card{Rank::Three, Suit::Paus}});
     PublicView weak = baseView(
-        {Card{Rank::Four, Suit::Ouros}, Card{Rank::Five, Suit::Ouros}, Card{Rank::Six, Suit::Ouros}},
-        vira);
+        {Card{Rank::Four, Suit::Ouros}, Card{Rank::Five, Suit::Ouros}, Card{Rank::Six, Suit::Ouros}});
     const int strongCalls = countCalls(strong, 10, 400);
     const int weakCalls = countCalls(weak, 10, 400);
     CHECK(strongCalls > weakCalls);
@@ -101,13 +89,10 @@ TEST(ai_strong_hand_calls_truco_more_than_weak) {
 }
 
 TEST(ai_strong_hand_accepts_more_than_weak) {
-    const Rank vira = Rank::Four;
     PublicView strong = baseView(
-        {Card{Rank::Five, Suit::Paus}, Card{Rank::Five, Suit::Copas}, Card{Rank::Three, Suit::Paus}},
-        vira);
+        {Card{Rank::Four, Suit::Paus}, Card{Rank::Seven, Suit::Copas}, Card{Rank::Three, Suit::Paus}});
     PublicView weak = baseView(
-        {Card{Rank::Four, Suit::Ouros}, Card{Rank::Five, Suit::Ouros}, Card{Rank::Six, Suit::Ouros}},
-        vira);
+        {Card{Rank::Four, Suit::Ouros}, Card{Rank::Five, Suit::Ouros}, Card{Rank::Six, Suit::Ouros}});
     strong.stake = Stake::Three;
     weak.stake = Stake::Three;
     strong.trucoPending = true;
@@ -120,10 +105,8 @@ TEST(ai_strong_hand_accepts_more_than_weak) {
 }
 
 TEST(ai_never_accepts_when_no_truco_pending) {
-    const Rank vira = Rank::Four;
     PublicView view = baseView(
-        {Card{Rank::Five, Suit::Paus}, Card{Rank::Five, Suit::Copas}, Card{Rank::Three, Suit::Paus}},
-        vira);
+        {Card{Rank::Five, Suit::Paus}, Card{Rank::Five, Suit::Copas}, Card{Rank::Three, Suit::Paus}});
     std::mt19937 rng(12);
     CHECK(!shouldAcceptTruco(view, rng));
 }
@@ -132,7 +115,7 @@ TEST(ai_eleven_hand_plays_manilha_most_of_time) {
     std::mt19937 rng(13);
     int plays = 0;
     for (int i = 0; i < 200; ++i) {
-        if (shouldPlayHandOfEleven(Card{Rank::Five, Suit::Paus}, Rank::Four, rng)) ++plays;
+        if (shouldPlayHandOfEleven(Card{Rank::Seven, Suit::Ouros}, rng)) ++plays;
     }
     CHECK(plays > 150);
 }
@@ -141,16 +124,14 @@ TEST(ai_eleven_hand_hides_weak_card_most_of_time) {
     std::mt19937 rng(14);
     int plays = 0;
     for (int i = 0; i < 200; ++i) {
-        if (shouldPlayHandOfEleven(Card{Rank::Four, Suit::Ouros}, Rank::Four, rng)) ++plays;
+        if (shouldPlayHandOfEleven(Card{Rank::Four, Suit::Ouros}, rng)) ++plays;
     }
     CHECK(plays < 80);
 }
 
 TEST(ai_is_deterministic_with_seed) {
-    const Rank vira = Rank::Four;
     PublicView view = baseView(
-        {Card{Rank::Five, Suit::Paus}, Card{Rank::Seven, Suit::Copas}, Card{Rank::Three, Suit::Ouros}},
-        vira);
+        {Card{Rank::Five, Suit::Paus}, Card{Rank::Seven, Suit::Copas}, Card{Rank::Three, Suit::Ouros}});
     std::mt19937 a(99);
     std::mt19937 b(99);
     for (int i = 0; i < 50; ++i) {

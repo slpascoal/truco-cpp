@@ -17,9 +17,9 @@ int countOutcome(const std::vector<TrickOutcome>& outcomes, TrickOutcome wanted)
 
 }  // namespace
 
-TrickOutcome trickWinner(Card a, Card b, Rank vira) {
-    const int left = cardStrength(a, vira);
-    const int right = cardStrength(b, vira);
+TrickOutcome trickWinner(Card a, Card b) {
+    const int left = cardStrength(a);
+    const int right = cardStrength(b);
     if (left > right) {
         return TrickOutcome::Human;
     }

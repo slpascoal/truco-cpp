@@ -375,8 +375,7 @@ void Session::tick(Clock::time_point now) {
         case SessionState::ElevenChoice:
             if (!hotseat() && !lanMode() && game_.elevenSide() == Side::Cpu &&
                 now_ >= until_) {
-                const bool play = shouldPlayHandOfEleven(game_.elevenCard(),
-                                                         game_.deal().vira.rank, aiRng_);
+                const bool play = shouldPlayHandOfEleven(game_.elevenCard(), aiRng_);
                 game_.chooseHandOfEleven(Side::Cpu, play);
                 message_ = play ? "O computador jogou a mao de 11 (3 pontos)."
                                 : "O computador escondeu a mao de 11 (1 ponto).";
@@ -699,7 +698,6 @@ PublicView Session::buildCpuView() const {
         view.played[static_cast<size_t>(i)] = game_.cardPlayed(Side::Cpu, i);
     }
     view.opponentCardInTrick = game_.currentTrickCard(Side::Human);
-    view.vira = game_.deal().vira;
     view.stake = game_.stake();
     view.progress = game_.progress();
     view.score = game_.score();
@@ -1181,7 +1179,6 @@ void Session::refreshView() {
         view_.humanTrickLabel = sideShortName(sync.you);
         view_.cpuTrickLabel = sideShortName(other(sync.you));
         view_.revealCpu = sync.revealed;
-        view_.manilhaText = "MANILHA: " + rankLabel(manilhaRank(sync.vira.rank));
         view_.trickText = "Vazas: " + sideShortName(Side::Human) + " " +
                           std::to_string(sync.tricksHuman) + " x " +
                           std::to_string(sync.tricksCpu) + " " + sideShortName(Side::Cpu);
@@ -1235,7 +1232,6 @@ void Session::refreshView() {
     view_.humanTrickLabel = sideShortName(Side::Human);
     view_.cpuTrickLabel = sideShortName(Side::Cpu);
     view_.revealCpu = game_.revealed();
-    view_.manilhaText = "MANILHA: " + rankLabel(manilhaRank(game_.deal().vira.rank));
     view_.trickText = "Vazas: " + sideShortName(Side::Human) + " " +
                       std::to_string(game_.progress().tricksWon(Side::Human)) + " x " +
                       std::to_string(game_.progress().tricksWon(Side::Cpu)) + " " +

@@ -13,30 +13,26 @@ std::vector<TrickOutcome> outcomes(std::initializer_list<TrickOutcome> list) {
 }  // namespace
 
 TEST(trick_higher_card_wins) {
-    const Rank vira = Rank::Four;
-    CHECK(trickWinner(Card{Rank::Three, Suit::Ouros}, Card{Rank::Two, Suit::Ouros}, vira) ==
+    CHECK(trickWinner(Card{Rank::Three, Suit::Ouros}, Card{Rank::Two, Suit::Ouros}) ==
           TrickOutcome::Human);
-    CHECK(trickWinner(Card{Rank::Two, Suit::Ouros}, Card{Rank::Three, Suit::Ouros}, vira) ==
+    CHECK(trickWinner(Card{Rank::Two, Suit::Ouros}, Card{Rank::Three, Suit::Ouros}) ==
           TrickOutcome::Cpu);
 }
 
 TEST(trick_manilha_beats_common) {
-    const Rank vira = Rank::Four;
-    CHECK(trickWinner(Card{Rank::Five, Suit::Ouros}, Card{Rank::Three, Suit::Paus}, vira) ==
+    CHECK(trickWinner(Card{Rank::Seven, Suit::Ouros}, Card{Rank::Three, Suit::Paus}) ==
           TrickOutcome::Human);
 }
 
-TEST(trick_manilha_suit_breaks_tie) {
-    const Rank vira = Rank::Four;
-    CHECK(trickWinner(Card{Rank::Five, Suit::Paus}, Card{Rank::Five, Suit::Copas}, vira) ==
+TEST(trick_fixed_manilha_hierarchy) {
+    CHECK(trickWinner(Card{Rank::Four, Suit::Paus}, Card{Rank::Seven, Suit::Copas}) ==
           TrickOutcome::Human);
-    CHECK(trickWinner(Card{Rank::Five, Suit::Copas}, Card{Rank::Five, Suit::Paus}, vira) ==
+    CHECK(trickWinner(Card{Rank::Seven, Suit::Copas}, Card{Rank::Four, Suit::Paus}) ==
           TrickOutcome::Cpu);
 }
 
 TEST(trick_equal_common_cards_tie) {
-    const Rank vira = Rank::Four;
-    CHECK(trickWinner(Card{Rank::Three, Suit::Paus}, Card{Rank::Three, Suit::Ouros}, vira) ==
+    CHECK(trickWinner(Card{Rank::Three, Suit::Paus}, Card{Rank::Three, Suit::Ouros}) ==
           TrickOutcome::Tie);
 }
 

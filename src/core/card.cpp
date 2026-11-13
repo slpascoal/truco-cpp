@@ -17,6 +17,22 @@ int rankIndex(Rank r) {
     return 0;
 }
 
+int manilhaStrength(Card c) {
+    if (c == Card{Rank::Four, Suit::Paus}) {
+        return 13;
+    }
+    if (c == Card{Rank::Seven, Suit::Copas}) {
+        return 12;
+    }
+    if (c == Card{Rank::Ace, Suit::Espadas}) {
+        return 11;
+    }
+    if (c == Card{Rank::Seven, Suit::Ouros}) {
+        return 10;
+    }
+    return -1;
+}
+
 }  // namespace
 
 bool operator==(Card a, Card b) {
@@ -41,20 +57,13 @@ int suitOrder(Suit s) {
     return 0;
 }
 
-Rank manilhaRank(Rank vira) {
-    const int next = (rankIndex(vira) + 1) % kRankCount;
-    return kRankOrder[next];
+bool isManilha(Card c) {
+    return manilhaStrength(c) >= 0;
 }
 
-bool isManilha(Card c, Rank vira) {
-    return c.rank == manilhaRank(vira);
-}
-
-int cardStrength(Card c, Rank vira) {
-    if (isManilha(c, vira)) {
-        return 10 + suitOrder(c.suit);
-    }
-    return commonStrength(c.rank);
+int cardStrength(Card c) {
+    const int manilha = manilhaStrength(c);
+    return manilha >= 0 ? manilha : commonStrength(c.rank);
 }
 
 std::string rankLabel(Rank r) {

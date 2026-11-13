@@ -22,39 +22,36 @@ TEST(card_suit_order) {
     CHECK(suitOrder(Suit::Copas) < suitOrder(Suit::Paus));
 }
 
-TEST(card_manilha_follows_vira) {
-    CHECK(manilhaRank(Rank::Four) == Rank::Five);
-    CHECK(manilhaRank(Rank::Seven) == Rank::Queen);
-    CHECK(manilhaRank(Rank::Three) == Rank::Four);
-    CHECK(manilhaRank(Rank::Ace) == Rank::Two);
+TEST(card_fixed_manilha_order) {
+    CHECK(cardStrength(Card{Rank::Four, Suit::Paus}) >
+          cardStrength(Card{Rank::Seven, Suit::Copas}));
+    CHECK(cardStrength(Card{Rank::Seven, Suit::Copas}) >
+          cardStrength(Card{Rank::Ace, Suit::Espadas}));
+    CHECK(cardStrength(Card{Rank::Ace, Suit::Espadas}) >
+          cardStrength(Card{Rank::Seven, Suit::Ouros}));
+    CHECK(cardStrength(Card{Rank::Seven, Suit::Ouros}) >
+          cardStrength(Card{Rank::Three, Suit::Paus}));
 }
 
 TEST(card_manilha_identification) {
-    CHECK(isManilha(Card{Rank::Five, Suit::Paus}, Rank::Four));
-    CHECK(!isManilha(Card{Rank::Four, Suit::Paus}, Rank::Four));
-    CHECK(isManilha(Card{Rank::Four, Suit::Ouros}, Rank::Three));
+    CHECK(isManilha(Card{Rank::Four, Suit::Paus}));
+    CHECK(isManilha(Card{Rank::Seven, Suit::Copas}));
+    CHECK(isManilha(Card{Rank::Ace, Suit::Espadas}));
+    CHECK(isManilha(Card{Rank::Seven, Suit::Ouros}));
+    CHECK(!isManilha(Card{Rank::Four, Suit::Ouros}));
+    CHECK(!isManilha(Card{Rank::Seven, Suit::Paus}));
+    CHECK(!isManilha(Card{Rank::Three, Suit::Paus}));
 }
 
 TEST(card_manilha_beats_every_common_card) {
-    const Card weakestManilha{Rank::Five, Suit::Ouros};
+    const Card weakestManilha{Rank::Seven, Suit::Ouros};
     const Card strongestCommon{Rank::Three, Suit::Paus};
-    CHECK(cardStrength(weakestManilha, Rank::Four) >
-          cardStrength(strongestCommon, Rank::Four));
-}
-
-TEST(card_manilha_order_by_suit) {
-    const Rank vira = Rank::Four;
-    CHECK(cardStrength(Card{Rank::Five, Suit::Paus}, vira) >
-          cardStrength(Card{Rank::Five, Suit::Copas}, vira));
-    CHECK(cardStrength(Card{Rank::Five, Suit::Copas}, vira) >
-          cardStrength(Card{Rank::Five, Suit::Espadas}, vira));
-    CHECK(cardStrength(Card{Rank::Five, Suit::Espadas}, vira) >
-          cardStrength(Card{Rank::Five, Suit::Ouros}, vira));
+    CHECK(cardStrength(weakestManilha) > cardStrength(strongestCommon));
 }
 
 TEST(card_suit_does_not_break_common_ties) {
-    CHECK_EQ(cardStrength(Card{Rank::Three, Suit::Paus}, Rank::Four),
-             cardStrength(Card{Rank::Three, Suit::Ouros}, Rank::Four));
+    CHECK_EQ(cardStrength(Card{Rank::Three, Suit::Paus}),
+             cardStrength(Card{Rank::Three, Suit::Ouros}));
 }
 
 TEST(card_labels) {

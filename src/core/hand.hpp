@@ -11,7 +11,7 @@ enum class Side { Human, Cpu };
 enum class TrickOutcome { Human, Cpu, Tie };
 
 // `a` is the card of the player who led the trick.
-TrickOutcome trickWinner(Card a, Card b, Rank vira);
+TrickOutcome trickWinner(Card a, Card b);
 
 // Resolves a hand from the trick outcomes already played.
 // Rules: two wins take the hand; first trick tied is decided by the second;

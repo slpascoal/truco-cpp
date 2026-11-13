@@ -10,7 +10,7 @@ double normalizedStrength(const PublicView& view) {
     int total = 0;
     for (int i = 0; i < 3; ++i) {
         if (!view.played[static_cast<size_t>(i)]) {
-            total += cardStrength(view.hand[static_cast<size_t>(i)], view.vira.rank);
+            total += cardStrength(view.hand[static_cast<size_t>(i)]);
         }
     }
     return static_cast<double>(total) / 39.0;
@@ -34,8 +34,8 @@ std::vector<int> availableCards(const PublicView& view) {
 int weakest(const PublicView& view, const std::vector<int>& indices) {
     int best = indices.front();
     for (int idx : indices) {
-        if (cardStrength(view.hand[static_cast<size_t>(idx)], view.vira.rank) <
-            cardStrength(view.hand[static_cast<size_t>(best)], view.vira.rank)) {
+        if (cardStrength(view.hand[static_cast<size_t>(idx)]) <
+            cardStrength(view.hand[static_cast<size_t>(best)])) {
             best = idx;
         }
     }
@@ -45,8 +45,8 @@ int weakest(const PublicView& view, const std::vector<int>& indices) {
 int strongest(const PublicView& view, const std::vector<int>& indices) {
     int best = indices.front();
     for (int idx : indices) {
-        if (cardStrength(view.hand[static_cast<size_t>(idx)], view.vira.rank) >
-            cardStrength(view.hand[static_cast<size_t>(best)], view.vira.rank)) {
+        if (cardStrength(view.hand[static_cast<size_t>(idx)]) >
+            cardStrength(view.hand[static_cast<size_t>(best)])) {
             best = idx;
         }
     }
@@ -63,16 +63,15 @@ int chooseCardIndex(const PublicView& view, std::mt19937& rng) {
     }
 
     if (view.opponentCardInTrick.has_value()) {
-        const int opponent = cardStrength(*view.opponentCardInTrick, view.vira.rank);
+        const int opponent = cardStrength(*view.opponentCardInTrick);
         int cheapestWinner = -1;
         for (int idx : indices) {
             const int strength =
-                cardStrength(view.hand[static_cast<size_t>(idx)], view.vira.rank);
+                cardStrength(view.hand[static_cast<size_t>(idx)]);
             if (strength > opponent &&
                 (cheapestWinner < 0 || strength <
                                            cardStrength(view.hand[static_cast<size_t>(
-                                                             cheapestWinner)],
-                                                        view.vira.rank))) {
+                                               cheapestWinner)]))) {
                 cheapestWinner = idx;
             }
         }
@@ -94,7 +93,7 @@ int chooseCardIndex(const PublicView& view, std::mt19937& rng) {
     // Otherwise lead low, preferring a non-manilha.
     std::vector<int> commons;
     for (int idx : indices) {
-        if (cardStrength(view.hand[static_cast<size_t>(idx)], view.vira.rank) < 10) {
+        if (cardStrength(view.hand[static_cast<size_t>(idx)]) < 10) {
             commons.push_back(idx);
         }
     }
@@ -134,8 +133,8 @@ bool shouldAcceptTruco(const PublicView& view, std::mt19937& rng) {
     return roll < 0.12;
 }
 
-bool shouldPlayHandOfEleven(Card hidden, Rank vira, std::mt19937& rng) {
-    const int strength = cardStrength(hidden, vira);
+bool shouldPlayHandOfEleven(Card hidden, std::mt19937& rng) {
+    const int strength = cardStrength(hidden);
     const double roll = unit(rng);
     if (strength >= 10) {
         return roll < 0.95;

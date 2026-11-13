@@ -21,13 +21,11 @@ int commonStrength(Rank r);
 // 0..3 following the manilha suit order Ouros < Espadas < Copas < Paus.
 int suitOrder(Suit s);
 
-// Rank immediately above the vira in the circular 4..3 sequence.
-Rank manilhaRank(Rank vira);
-
-bool isManilha(Card c, Rank vira);
+// Fixed truco mineiro manilhas: 4♣ > 7♥ > A♠ > 7♦.
+bool isManilha(Card c);
 
 // Common cards: 0..9. Manilhas always outrank them: 10..13.
-int cardStrength(Card c, Rank vira);
+int cardStrength(Card c);
 
 std::string rankLabel(Rank r);
 std::string suitLabel(Suit s);

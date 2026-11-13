@@ -52,8 +52,8 @@ void Game::resetHand() {
         kind_ = HandKind::IronHand;
         stake_ = Stake::Three;
         revealed_ = true;
-        const int humanCard = cardStrength(deal_.human[0], deal_.vira.rank);
-        const int cpuCard = cardStrength(deal_.cpu[0], deal_.vira.rank);
+        const int humanCard = cardStrength(deal_.human[0]);
+        const int cpuCard = cardStrength(deal_.cpu[0]);
         Side winner = humanCard > cpuCard ? Side::Human : Side::Cpu;
         if (humanCard == cpuCard) {
             winner = dealer_;
@@ -169,7 +169,7 @@ void Game::playCard(Side side, int index) {
 void Game::resolveTrick() {
     const Card first = *trickCards_[static_cast<int>(trickLeader_)];
     const Card second = *trickCards_[static_cast<int>(other(trickLeader_))];
-    const TrickOutcome local = trickWinner(first, second, deal_.vira.rank);
+    const TrickOutcome local = trickWinner(first, second);
 
     Side trickWinnerSide = dealer_;
     if (local != TrickOutcome::Tie) {
@@ -224,9 +224,9 @@ void Game::resolveShowdown(Side elevenSide) {
     const Side opponent = other(elevenSide);
     int bestOpponent = -1;
     for (const Card& card : handOf(opponent)) {
-        bestOpponent = std::max(bestOpponent, cardStrength(card, deal_.vira.rank));
+        bestOpponent = std::max(bestOpponent, cardStrength(card));
     }
-    const int mineStrength = cardStrength(mine, deal_.vira.rank);
+    const int mineStrength = cardStrength(mine);
     Side winner = elevenSide;
     if (bestOpponent > mineStrength) {
         winner = opponent;

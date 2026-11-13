@@ -25,8 +25,7 @@ int firstUnplayed(const Game& game, Side side) {
 int bestCardIndex(const Game& game, Side side) {
     int best = 0;
     for (int i = 1; i < 3; ++i) {
-        if (cardStrength(game.handOf(side)[i], game.deal().vira.rank) >
-            cardStrength(game.handOf(side)[best], game.deal().vira.rank)) {
+        if (cardStrength(game.handOf(side)[i]) > cardStrength(game.handOf(side)[best])) {
             best = i;
         }
     }
@@ -170,9 +169,8 @@ TEST(game_hand_of_eleven_play_worth_three) {
     Game game(rng);
     game.setScoreForTesting(GameScore{11, 5});
     game.startHand();
-    const int elevenStrength = cardStrength(game.handOf(Side::Human)[0], game.deal().vira.rank);
-    const int cpuStrength =
-        cardStrength(game.handOf(Side::Cpu)[bestCardIndex(game, Side::Cpu)], game.deal().vira.rank);
+    const int elevenStrength = cardStrength(game.handOf(Side::Human)[0]);
+    const int cpuStrength = cardStrength(game.handOf(Side::Cpu)[bestCardIndex(game, Side::Cpu)]);
     game.chooseHandOfEleven(Side::Human, true);
     CHECK(game.handFinished());
     CHECK_EQ(static_cast<int>(game.stake()), 3);
