@@ -30,7 +30,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
         4. `make test` verde
       rastreia: Req-06, Req-09, Req-10, Req-18, Req-19
 
-- [ ] 3. Transporte do host: escuta, aceite e leitura de linhas
+- [x] 3. Transporte do host: escuta, aceite e leitura de linhas
       altera: `src/net/socket.{hpp,cpp}`, `src/net/host_server.{hpp,cpp}`, `tests/test_net_host.cpp`
       consome: tarefa 2 (`readLines` devolve linhas cruas)
       produz: `Socket::listenTcp/closeFd/readLines/sendAll`; `HostServer::listen/acceptPending/connected/readLines/sendLine/disconnected/dropClient/shutdown/localAddresses/port`
