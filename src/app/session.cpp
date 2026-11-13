@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include "ui/terminal.hpp"
+#include "net/room_server.hpp"
 
 namespace truco {
 namespace {
@@ -71,6 +72,16 @@ std::string sessionStateName(SessionState state) {
             return "LanWaiting";
         case SessionState::LanError:
             return "LanError";
+        case SessionState::RoyaleConfig:
+            return "RoyaleConfig";
+        case SessionState::RoyaleLobby:
+            return "RoyaleLobby";
+        case SessionState::RoyaleWaiting:
+            return "RoyaleWaiting";
+        case SessionState::RoyalePlay:
+            return "RoyalePlay";
+        case SessionState::RoyaleResult:
+            return "RoyaleResult";
     }
     return "Unknown";
 }
@@ -337,7 +348,16 @@ void Session::tick(Clock::time_point now) {
     if (now > now_) {
         now_ = now;
     }
-    if (lanHost()) {
+    if (royaleHost()) {
+        if (state_ == SessionState::RoyaleLobby) {
+            pumpRoyaleLobby();
+        } else if (state_ == SessionState::RoyalePlay ||
+                   state_ == SessionState::RoyaleResult) {
+            pumpRoyaleHost();
+        }
+    } else if (royaleGuest()) {
+        pumpRoyaleGuest();
+    } else if (lanHost()) {
         if (lanMatchActive_) {
             pumpHost();
         } else {
@@ -452,6 +472,14 @@ void Session::playForSide(Side side, int index) {
 }
 
 bool Session::canSelectCards() const {
+    if (royaleHost()) {
+        return state_ == SessionState::RoyalePlay && royale_ && royale_->canPlay(0);
+    }
+    if (royaleGuest()) {
+        return state_ == SessionState::RoyalePlay &&
+               royaleView_.phase == RoyalePhase::Playing &&
+               royaleView_.turn == royaleSeat_;
+    }
     if (lanGuest()) {
         return lanMatchActive_ && !guestWaitingAck_ &&
                guestView_.phase == NetPhase::Play && guestView_.turn == localSide();
@@ -469,7 +497,15 @@ void Session::selectCard(int index) {
     if (index < 0 || index > 2) {
         return;
     }
-    if (lanGuest()) {
+    if (royaleHost()) {
+        if (royale_->seat(0).played[static_cast<size_t>(index)]) {
+            return;
+        }
+    } else if (royaleGuest()) {
+        if (royaleView_.playedOwn[static_cast<size_t>(index)]) {
+            return;
+        }
+    } else if (lanGuest()) {
         if (guestView_.playedOwn[static_cast<size_t>(index)]) {
             return;
         }
@@ -489,6 +525,20 @@ void Session::confirmSelection() {
         return;
     }
     if (selectedCard_ < 0 || selectedCard_ > 2) {
+        return;
+    }
+    if (royaleHost()) {
+        royaleHostPlay(selectedCard_);
+        return;
+    }
+    if (royaleGuest()) {
+        if (royaleView_.playedOwn[static_cast<size_t>(selectedCard_)]) {
+            return;
+        }
+        guest_->sendLine(encodeLine(MessageType::Play,
+                                    {std::to_string(selectedCard_ + 1)}));
+        selectedCard_ = -1;
+        refreshView();
         return;
     }
     if (lanGuest()) {
@@ -513,6 +563,32 @@ void Session::cancelSelection() {
 }
 
 void Session::activateAction(int index) {
+    if (royaleGuest()) {
+        const RoyaleView& view = royaleView_;
+        if (state_ == SessionState::RoyaleResult) {
+            resetToMenu();
+            return;
+        }
+        if (view.phase == RoyalePhase::Playing && view.turn == royaleSeat_) {
+            if (index == 0) {
+                confirmSelection();
+            } else if (index == 1 && view.canRaise) {
+                guest_->sendLine(encodeLine(MessageType::Truco));
+            }
+        } else if (view.phase == RoyalePhase::TrucoAnswer &&
+                   view.responder == royaleSeat_) {
+            if (index == 0) {
+                guest_->sendLine(encodeLine(MessageType::Accept));
+            } else if (index == 1) {
+                guest_->sendLine(encodeLine(MessageType::Run));
+            }
+        }
+        return;
+    }
+    if (royaleHost()) {
+        royaleHostAction(index);
+        return;
+    }
     if (lanGuest()) {
         switch (guestView_.phase) {
             case NetPhase::Play:
@@ -773,6 +849,13 @@ void Session::cancelLan() {
 void Session::resetToMenu() {
     host_.reset();
     guest_.reset();
+    if (room_) room_->shutdown();
+    room_.reset();
+    royale_.reset();
+    royaleJoined_.clear();
+    royaleRevealScheduled_ = false;
+    royaleSeat_ = -1;
+    royaleView_ = RoyaleView{};
     lanHandshakeDone_ = false;
     lanMatchActive_ = false;
     mode_ = GameMode::Cpu;
@@ -1092,6 +1175,97 @@ void Session::refreshView() {
     view_.humanLabel = lanNames ? "JOGADOR 1" : "VOCE";
     view_.cpuLabel = lanNames ? "JOGADOR 2" : "COMPUTADOR";
 
+    if (royaleMode()) {
+        view_.humanScore = 0;
+        view_.cpuScore = 0;
+        view_.humanLabel = "J" + std::to_string((royaleHost() ? 0 : royaleSeat_) + 1);
+        view_.cpuLabel = "BATTLE ROYALE";
+        switch (state_) {
+            case SessionState::RoyaleConfig: {
+                view_.screen = ViewModel::Screen::LanConfig;
+                view_.lanTitle = "Battle Royale (LAN)";
+                view_.lanFieldLabel[0] = "Jogadores (3-13)";
+                view_.lanFieldValue[0] = royalePlayers_.value();
+                view_.lanFieldLabel[1] = "Porta";
+                view_.lanFieldValue[1] = lanPort_.value();
+                view_.lanFieldFocus = 0;
+                view_.lanHint = "Jogadores 3-13 | Enter inicia | ESC volta";
+                view_.actions = {"Hospedar", "Voltar"};
+                break;
+            }
+            case SessionState::RoyaleLobby: {
+                view_.screen = ViewModel::Screen::LanWaiting;
+                view_.lanTitle = "Sala battle royale";
+                std::string addresses;
+                for (const std::string& address : net::localAddresses()) {
+                    if (!addresses.empty()) addresses += " / ";
+                    addresses += address;
+                }
+                view_.lanAddressText = "IP: " + addresses +
+                                       "  Porta: " + std::to_string(royalePort());
+                view_.actions = {"Iniciar", "Cancelar"};
+                break;
+            }
+            case SessionState::RoyaleWaiting: {
+                view_.screen = ViewModel::Screen::LanWaiting;
+                view_.lanTitle = "Entrando na sala...";
+                view_.actions = {"Cancelar"};
+                break;
+            }
+            case SessionState::RoyaleResult: {
+                view_.screen = ViewModel::Screen::MatchResult;
+                view_.matchResultText = message_;
+                view_.actions = {"Voltar ao menu"};
+                break;
+            }
+            case SessionState::RoyalePlay:
+            default: {
+                view_.screen = ViewModel::Screen::Game;
+                if (royaleHost() && royale_) {
+                    const RoyaleSeat& own = royale_->seat(0);
+                    view_.humanCards = own.hand;
+                    view_.humanPlayed = own.played;
+                    view_.stakeText = "MAO VALE " +
+                                      std::to_string(royale_->pendingValue());
+                    view_.turnText = royale_->currentTurn() == 0
+                                         ? "Sua vez"
+                                         : "Vez do adversario";
+                    view_.trickText = "Vazas jogadas: " +
+                                      std::to_string(royale_->tricksPlayed());
+                    if (royale_->phase() == RoyalePhase::Playing &&
+                        royale_->currentTurn() == 0) {
+                        view_.actions = royale_->canCallTruco(0)
+                                            ? std::vector<std::string>{"Jogar", "Truco!"}
+                                            : std::vector<std::string>{"Jogar"};
+                    } else if (royale_->phase() == RoyalePhase::TrucoAnswer &&
+                               royale_->trucoResponder() == 0) {
+                        view_.actions = {"Aceitar", "Correr"};
+                    }
+                } else {
+                    view_.humanCards = royaleView_.own;
+                    view_.humanPlayed = royaleView_.playedOwn;
+                    view_.stakeText = "MAO VALE " + std::to_string(royaleView_.stake);
+                    view_.turnText = royaleView_.turn == royaleSeat_
+                                         ? "Sua vez"
+                                         : "Vez do adversario";
+                    view_.trickText = "Vazas jogadas: " +
+                                      std::to_string(royaleView_.tricksPlayed);
+                    if (royaleView_.phase == RoyalePhase::Playing &&
+                        royaleView_.turn == royaleSeat_) {
+                        view_.actions = royaleView_.canRaise
+                                            ? std::vector<std::string>{"Jogar", "Truco!"}
+                                            : std::vector<std::string>{"Jogar"};
+                    } else if (royaleView_.phase == RoyalePhase::TrucoAnswer &&
+                               royaleView_.responder == royaleSeat_) {
+                        view_.actions = {"Aceitar", "Correr"};
+                    }
+                }
+                break;
+            }
+        }
+        return;
+    }
+
     switch (state_) {
         case SessionState::Menu:
             view_.screen = ViewModel::Screen::Menu;
@@ -1277,6 +1451,440 @@ void Session::refreshView() {
 
     if (lanHost()) {
         broadcastIfHost();
+    }
+}
+
+uint16_t Session::royalePort() const {
+    return room_ ? room_->port() : 0;
+}
+
+void Session::setRoyalePlayersForTesting(int players) {
+    royaleMax_ = players;
+}
+
+void Session::openRoyaleConfig() {
+    mode_ = GameMode::RoyaleHost;
+    state_ = SessionState::RoyaleConfig;
+    royalePlayers_.set(std::to_string(royaleMax_));
+    lanPort_.set("4000");
+    message_.clear();
+    selectedAction_ = 0;
+    refreshView();
+}
+
+void Session::confirmRoyaleConfig() {
+    int players = 0;
+    for (char ch : royalePlayers_.value()) {
+        if (ch < '0' || ch > '9') {
+            players = -1;
+            break;
+        }
+        players = players * 10 + (ch - '0');
+    }
+    if (players < 3 || players > kRoyaleMaxPlayers) {
+        message_ = "Jogadores deve ser de 3 a 13";
+        refreshView();
+        return;
+    }
+    uint16_t port = 0;
+    if (!parsePort(lanPort_.value(), port)) {
+        message_ = "Porta invalida: use 1 a 65535";
+        refreshView();
+        return;
+    }
+    if (!openRoyaleHostForTesting(port, players)) {
+        return;
+    }
+}
+
+bool Session::openRoyaleHostForTesting(uint16_t port, int maxPlayers) {
+    royaleMax_ = std::max(3, std::min(kRoyaleMaxPlayers, maxPlayers));
+    room_ = std::make_unique<net::RoomServer>();
+    std::string error;
+    if (!room_->listen(port, error)) {
+        room_.reset();
+        message_ = "Erro: " + error;
+        refreshView();
+        return false;
+    }
+    royale_ = nullptr;
+    royaleJoined_.clear();
+    royaleRevealScheduled_ = false;
+    royaleSeat_ = 0;
+    mode_ = GameMode::RoyaleHost;
+    state_ = SessionState::RoyaleLobby;
+    message_ = "Aguardando jogadores";
+    selectedAction_ = 0;
+    refreshView();
+    return true;
+}
+
+bool Session::openRoyaleJoinForTesting(const std::string& ip, uint16_t port) {
+    guest_ = std::make_unique<net::GuestClient>();
+    std::string error;
+    if (!guest_->connectTo(ip, port, 3000, error)) {
+        guest_.reset();
+        message_ = "Erro: " + error;
+        refreshView();
+        return false;
+    }
+    mode_ = GameMode::RoyaleGuest;
+    state_ = SessionState::RoyaleWaiting;
+    royaleSeat_ = -1;
+    royaleView_ = RoyaleView{};
+    guest_->sendLine(encodeLine(MessageType::Hello, {"ROYALE", "1"}));
+    message_ = "Conectando...";
+    selectedAction_ = 0;
+    refreshView();
+    return true;
+}
+
+void Session::pumpRoyaleLobby() {
+    if (!room_) {
+        return;
+    }
+    room_->acceptPending();
+    while (royaleJoined_.size() < static_cast<size_t>(room_->clientCount())) {
+        royaleJoined_.push_back(false);
+    }
+    for (int client = 0; client < room_->clientCount(); ++client) {
+        if (!room_->connected(client)) {
+            continue;
+        }
+        for (const std::string& line : room_->readLines(client)) {
+            const Message message = parseLine(line);
+            if (message.type == MessageType::Hello) {
+                const bool valid = message.fields.size() >= 2 &&
+                                   message.fields[0] == "ROYALE" &&
+                                   message.fields[1] == "1";
+                if (!valid) {
+                    room_->sendLine(client, encodeLine(MessageType::Error, {"VERSION"},
+                                                       "versao incompativel"));
+                    room_->dropClient(client);
+                    continue;
+                }
+                room_->sendLine(client, encodeLine(MessageType::Welcome,
+                                                   {"ROYALE", "1",
+                                                    std::to_string(client + 1)}));
+                royaleJoined_[static_cast<size_t>(client)] = true;
+            }
+        }
+    }
+    std::vector<std::string> names{"J1"};
+    int connected = 0;
+    for (int client = 0; client < room_->clientCount(); ++client) {
+        if (royaleJoined_[static_cast<size_t>(client)] && room_->connected(client)) {
+            ++connected;
+            names.push_back("J" + std::to_string(client + 2));
+        }
+    }
+    room_->broadcast(encodeLobby(names));
+    message_ = "Jogadores: " + std::to_string(connected + 1) + "/" +
+               std::to_string(royaleMax_);
+    refreshView();
+}
+
+void Session::startRoyaleMatch() {
+    if (!room_) {
+        return;
+    }
+    int joined = 0;
+    for (int client = 0; client < room_->clientCount(); ++client) {
+        if (!royaleJoined_[static_cast<size_t>(client)] || !room_->connected(client)) {
+            if (room_->connected(client)) {
+                room_->dropClient(client);
+            }
+            continue;
+        }
+        ++joined;
+    }
+    if (joined + 1 < 3) {
+        message_ = "Conecte pelo menos 3 jogadores";
+        refreshView();
+        return;
+    }
+    royale_ = std::make_unique<RoyaleMatch>(joined + 1, rng_);
+    royaleRevealScheduled_ = false;
+    state_ = SessionState::RoyalePlay;
+    message_ = "Partida iniciada";
+    until_ = now_;
+    room_->broadcast(encodeLine(MessageType::Start, {"ROYALE"}));
+    broadcastRoyale();
+    refreshView();
+}
+
+RoyaleView Session::makeRoyaleView(int seat) const {
+    RoyaleView view;
+    view.seq = royaleSeq_;
+    view.you = seat;
+    view.phase = royale_->phase();
+    view.turn = royale_->currentTurn();
+    view.stake = royale_->pendingValue();
+    view.caller = royale_->trucoCaller();
+    view.responder = royale_->trucoResponder();
+    view.handWinner = royale_->handWinner();
+    view.matchWinner = royale_->matchWinner();
+    view.tricksPlayed = royale_->tricksPlayed();
+    view.playerCount = royale_->playerCount();
+    view.canRaise = royale_->canCallTruco(seat);
+    const bool revealAll = royale_->phase() == RoyalePhase::HandEnd ||
+                           royale_->phase() == RoyalePhase::MatchEnd;
+    for (int i = 0; i < view.playerCount; ++i) {
+        const RoyaleSeat& source = royale_->seat(i);
+        RoyaleSeatView& target = view.seats.at(static_cast<size_t>(i));
+        target.points = source.points;
+        target.eliminated = source.eliminated;
+        target.inHand = source.inHand;
+        target.tableCard = source.tableCard;
+        if (revealAll || !source.inHand) {
+            target.revealed = source.hand;
+        }
+    }
+    const RoyaleSeat& own = royale_->seat(seat);
+    view.own = own.hand;
+    view.playedOwn = own.played;
+    return view;
+}
+
+void Session::broadcastRoyale() {
+    if (!room_ || !royale_) {
+        return;
+    }
+    ++royaleSeq_;
+    for (int client = 0; client < room_->clientCount(); ++client) {
+        if (!room_->connected(client)) {
+            continue;
+        }
+        room_->sendLine(client, encodeRoyaleState(makeRoyaleView(client + 1)));
+    }
+}
+
+void Session::applyRoyaleIntent(int seat, const Message& message) {
+    if (!royale_) {
+        return;
+    }
+    try {
+        switch (message.type) {
+            case MessageType::Play: {
+                if (message.fields.size() != 1) break;
+                const int value = std::atoi(message.fields[0].c_str());
+                if (value < 1 || value > 3) break;
+                if (!royale_->canPlay(seat)) break;
+                royale_->playCard(seat, value - 1);
+                break;
+            }
+            case MessageType::Truco:
+                if (royale_->canCallTruco(seat)) {
+                    royale_->callTruco(seat);
+                }
+                break;
+            case MessageType::Accept:
+            case MessageType::Run:
+                if (royale_->phase() != RoyalePhase::TrucoAnswer ||
+                    royale_->trucoResponder() != seat) {
+                    break;
+                }
+                royale_->respondTruco(message.type == MessageType::Accept);
+                break;
+            default:
+                break;
+        }
+    } catch (const std::exception&) {
+    }
+}
+
+void Session::pumpRoyaleHost() {
+    if (!room_ || !royale_) {
+        return;
+    }
+    room_->acceptPending();
+    for (int client = 0; client < room_->clientCount(); ++client) {
+        const size_t index = static_cast<size_t>(client);
+        if (index >= royaleJoined_.size() || !royaleJoined_[index] ||
+            !room_->connected(client)) {
+            if (room_->connected(client) && index >= royaleJoined_.size()) {
+                room_->sendLine(client, encodeLine(MessageType::Error, {"STARTED"},
+                                                   "partida ja iniciada"));
+                room_->dropClient(client);
+            }
+            if (index < royaleJoined_.size() && royaleJoined_[index] &&
+                !room_->connected(client)) {
+                royaleJoined_[index] = false;
+                royale_->removePlayer(client + 1);
+            }
+            continue;
+        }
+        for (const std::string& line : room_->readLines(client)) {
+            applyRoyaleIntent(client + 1, parseLine(line));
+        }
+    }
+
+    if (royale_->phase() == RoyalePhase::HandEnd) {
+        if (!royaleRevealScheduled_) {
+            royaleRevealScheduled_ = true;
+            until_ = now_ + std::chrono::milliseconds(1500);
+        } else if (now_ >= until_) {
+            royaleRevealScheduled_ = false;
+            royale_->startHand();
+        }
+    }
+    if (royale_->matchOver()) {
+        state_ = SessionState::RoyaleResult;
+        message_ = "Jogador " + std::to_string(royale_->matchWinner() + 1) +
+                   " venceu!";
+    }
+    broadcastRoyale();
+    refreshView();
+}
+
+void Session::applyRoyaleState(const RoyaleView& view) {
+    royaleView_ = view;
+    royaleSeat_ = view.you;
+    if (view.phase == RoyalePhase::MatchEnd) {
+        state_ = SessionState::RoyaleResult;
+        message_ = view.matchWinner >= 0
+                       ? "Jogador " + std::to_string(view.matchWinner + 1) + " venceu!"
+                       : "Partida encerrada";
+    } else {
+        state_ = SessionState::RoyalePlay;
+        if (view.phase == RoyalePhase::TrucoAnswer) {
+            message_ = "Decisao de truco";
+        } else if (view.phase == RoyalePhase::HandEnd) {
+            message_ = "Fim da mao";
+        } else {
+            message_ = view.turn == royaleSeat_ ? "Sua vez" : "Vez do adversario";
+        }
+    }
+    refreshView();
+}
+
+void Session::pumpRoyaleGuest() {
+    if (!guest_) {
+        return;
+    }
+    if (guest_->disconnected()) {
+        enterRoyaleError("Conexao perdida com o host");
+        return;
+    }
+    for (const std::string& line : guest_->readLines()) {
+        const Message message = parseLine(line);
+        switch (message.type) {
+            case MessageType::Welcome: {
+                const bool valid = message.fields.size() >= 3 &&
+                                   message.fields[0] == "ROYALE" &&
+                                   message.fields[1] == "1";
+                if (!valid) {
+                    enterRoyaleError("Versao de protocolo incompativel");
+                    return;
+                }
+                royaleSeat_ = std::atoi(message.fields[2].c_str());
+                state_ = SessionState::RoyalePlay;
+                message_ = "Conectado como J" + std::to_string(royaleSeat_ + 1);
+                refreshView();
+                break;
+            }
+            case MessageType::Start:
+                state_ = SessionState::RoyalePlay;
+                break;
+            case MessageType::RState: {
+                RoyaleView view;
+                if (decodeRoyaleState(line, view)) {
+                    applyRoyaleState(view);
+                }
+                break;
+            }
+            case MessageType::Error:
+                enterRoyaleError(message.text.empty() ? "Erro do host" : message.text);
+                return;
+            case MessageType::Msg:
+                message_ = message.text;
+                refreshView();
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void Session::enterRoyaleError(const std::string& reason) {
+    if (room_) {
+        room_->shutdown();
+        room_.reset();
+    }
+    if (guest_) {
+        guest_->close();
+        guest_.reset();
+    }
+    royale_ = nullptr;
+    state_ = SessionState::LanError;
+    selectedAction_ = 0;
+    message_ = reason;
+    refreshView();
+}
+
+void Session::royaleHostPlay(int index) {
+    if (!royale_ || !royale_->canPlay(0)) {
+        return;
+    }
+    try {
+        royale_->playCard(0, index);
+    } catch (const std::exception&) {
+        return;
+    }
+    selectedCard_ = -1;
+    message_ = "Voce jogou";
+    broadcastRoyale();
+    refreshView();
+}
+
+void Session::royaleHostAction(int index) {
+    switch (state_) {
+        case SessionState::RoyaleConfig:
+            if (index == 0) {
+                confirmRoyaleConfig();
+            } else {
+                resetToMenu();
+            }
+            break;
+        case SessionState::RoyaleLobby:
+            if (index == 0) {
+                startRoyaleMatch();
+            } else {
+                resetToMenu();
+            }
+            break;
+        case SessionState::RoyalePlay:
+            if (!royale_) {
+                break;
+            }
+            if (royale_->phase() == RoyalePhase::TrucoAnswer) {
+                if (royale_->trucoResponder() != 0) {
+                    break;
+                }
+                try {
+                    royale_->respondTruco(index == 0);
+                } catch (const std::exception&) {
+                    break;
+                }
+            } else if (royale_->phase() == RoyalePhase::Playing) {
+                if (royale_->currentTurn() != 0) {
+                    break;
+                }
+                if (index == 0) {
+                    confirmSelection();
+                } else if (index == 1 && royale_->canCallTruco(0)) {
+                    royale_->callTruco(0);
+                    message_ = "Voce pediu truco";
+                }
+            }
+            broadcastRoyale();
+            refreshView();
+            break;
+        case SessionState::RoyaleResult:
+            resetToMenu();
+            break;
+        default:
+            break;
     }
 }
 

@@ -7,16 +7,18 @@
 
 #include "ai/cpu_player.hpp"
 #include "core/game.hpp"
+#include "core/royale.hpp"
 #include "net/guest_client.hpp"
 #include "net/host_server.hpp"
 #include "net/protocol.hpp"
+#include "net/room_server.hpp"
 #include "ui/input.hpp"
 #include "ui/render.hpp"
 #include "ui/text_input.hpp"
 
 namespace truco {
 
-enum class GameMode { Cpu, Hotseat, LanHost, LanGuest };
+enum class GameMode { Cpu, Hotseat, LanHost, LanGuest, RoyaleHost, RoyaleGuest };
 
 enum class SessionState {
     Menu,
@@ -31,7 +33,12 @@ enum class SessionState {
     MatchResult,
     LanConfig,
     LanWaiting,
-    LanError
+    LanError,
+    RoyaleConfig,
+    RoyaleLobby,
+    RoyaleWaiting,
+    RoyalePlay,
+    RoyaleResult
 };
 
 class Session {
@@ -68,6 +75,13 @@ public:
     void beginHotseatWithScoreForTesting(GameScore score);
     bool openLanHostForTesting(uint16_t port);
     bool openLanConnectForTesting(const std::string& ip, uint16_t port);
+    bool openRoyaleHostForTesting(uint16_t port, int maxPlayers);
+    bool openRoyaleJoinForTesting(const std::string& ip, uint16_t port);
+    void setRoyalePlayersForTesting(int players);
+    uint16_t royalePort() const;
+    const RoyaleMatch* royaleMatch() const { return royale_.get(); }
+    const RoyaleView& royaleView() const { return royaleView_; }
+    int royaleSeat() const { return royaleSeat_; }
     uint16_t lanPort() const;
     bool lanConnected() const;
     const SyncState& guestSync() const { return guestView_; }
@@ -81,6 +95,9 @@ private:
     bool lanHost() const { return mode_ == GameMode::LanHost; }
     bool lanGuest() const { return mode_ == GameMode::LanGuest; }
     bool lanMode() const { return lanHost() || lanGuest(); }
+    bool royaleHost() const { return mode_ == GameMode::RoyaleHost; }
+    bool royaleGuest() const { return mode_ == GameMode::RoyaleGuest; }
+    bool royaleMode() const { return royaleHost() || royaleGuest(); }
     Side localSide() const { return lanGuest() ? Side::Cpu : Side::Human; }
 
     bool canSelectCards() const;
@@ -113,6 +130,21 @@ private:
     SyncState makeSync(Side viewer) const;
     void sendGuest(MessageType type, const std::vector<std::string>& fields = {});
     void resetToMenu();
+
+    void openRoyaleConfig();
+    void confirmRoyaleConfig();
+    void startRoyaleMatch();
+    void pumpRoyaleLobby();
+    void pumpRoyaleHost();
+    void pumpRoyaleGuest();
+    void applyRoyaleIntent(int seat, const Message& message);
+    void applyRoyaleState(const RoyaleView& view);
+    void broadcastRoyale();
+    void enterRoyaleError(const std::string& reason);
+    RoyaleView makeRoyaleView(int seat) const;
+    void royaleHostPlay(int index);
+    void royaleHostAction(int index);
+    bool royaleCanSelect() const;
 
     std::mt19937 rng_;
     std::mt19937 aiRng_;
@@ -147,6 +179,16 @@ private:
     std::string lanLastMessage_;
     SyncState guestView_;
     std::string guestMessage_;
+
+    TextInput royalePlayers_{"0123456789", "4"};
+    int royaleMax_ = 4;
+    std::unique_ptr<net::RoomServer> room_;
+    std::unique_ptr<RoyaleMatch> royale_;
+    std::vector<bool> royaleJoined_;
+    bool royaleRevealScheduled_ = false;
+    int royaleSeat_ = -1;
+    RoyaleView royaleView_;
+    uint32_t royaleSeq_ = 0;
 };
 
 std::string sessionStateName(SessionState state);
