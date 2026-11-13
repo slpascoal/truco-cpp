@@ -138,7 +138,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde; `make run` partida completa com mouse e com teclado
       rastreia: Req-21, Req-28, Req-29, Req-30, Critérios de Aceite (UI)
 
-- [ ] 12. README e verificação final de aceite
+- [x] 12. README e verificação final de aceite
       altera: `README.md`
       consome: binário e alvos do Makefile
       produz: instruções de build/execução, controles, regras implementadas
