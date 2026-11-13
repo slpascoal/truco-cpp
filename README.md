@@ -14,6 +14,15 @@ que pede truco, corre e blefa.
 +-------+  +-------+  +-------+
 ```
 
+## Modos de jogo
+
+- **Jogar vs CPU:** partida contra a heurística do computador, com truco, corre e blefe.
+- **Jogar 2 jogadores (hotseat):** dois humanos no mesmo terminal, alternando turnos. Antes de
+  cada turno (e antes de responder truco ou decidir a mão de 11) aparece a tela
+  **"Passe o controle para Jogador N"**; nenhuma carta é desenhada até a confirmação. Ao final da
+  mão as cartas são reveladas, como em uma mesa real.
+- A LAN/online fica para uma versão futura.
+
 ## Requisitos
 
 - Linux/POSIX com terminal ANSI 256 cores (xterm, kitty, alacritty, GNOME Terminal, tmux...).
@@ -42,7 +51,8 @@ TRUCO_SEED=42 ./truco
 | Cancelar seleção | — | `Esc` |
 | Pedir truco / seis / nove / doze | botão **Truco!** | `2` na tela de vez (quando disponível) |
 | Aceitar / correr | botões do diálogo | `1` aceita, `2` corre |
-| Menu e tela final | botões | `1` / `2` ou `Enter` na opção selecionada |
+| Menu e tela final | botões | `1` CPU, `2` hotseat, `3` sair; `Enter` na opção selecionada |
+| Confirmar troca de jogador | botão **Continuar** | `Enter` ou `1` |
 | Sair | — | `Q` ou `Ctrl+C` |
 
 A interface usa mouse tracking SGR. Se o terminal não reportar mouse, o jogo avisa e continua

@@ -99,7 +99,7 @@ Base: `.oh-my-sdd/specs/multiplayer-local-hotseat/spec.md` (validado)
       passos: reduzido (documentação) — justificativa: sem lógica testável; verificação é executar os comandos e conferir os controles
       rastreia: Req-01, Req-03
 
-- [ ] 8. Auditoria de diff
+- [x] 8. Auditoria de diff
       altera: —
       consome: commits das tarefas 1–7
       produz: relatório de conformidade escopo × diff
