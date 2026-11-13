@@ -21,6 +21,7 @@ RoyaleView makeView(int players, bool revealAll) {
     view.matchWinner = -1;
     view.tricksPlayed = 1;
     view.playerCount = players;
+    view.canRaise = true;
     for (int i = 0; i < players; ++i) {
         view.seats[static_cast<size_t>(i)].points = 12 - i;
         view.seats[static_cast<size_t>(i)].eliminated = i == players - 1;
@@ -57,6 +58,7 @@ TEST(royale_state_roundtrip_three_players) {
     CHECK_EQ(parsed.responder, original.responder);
     CHECK_EQ(parsed.tricksPlayed, original.tricksPlayed);
     CHECK_EQ(parsed.playerCount, original.playerCount);
+    CHECK_EQ(parsed.canRaise, original.canRaise);
     CHECK_EQ(parsed.seats.at(0).points, original.seats.at(0).points);
     CHECK(parsed.seats.at(0).eliminated == original.seats.at(0).eliminated);
     CHECK(parsed.seats.at(0).inHand == original.seats.at(0).inHand);

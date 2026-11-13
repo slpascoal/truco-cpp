@@ -104,6 +104,7 @@ struct RoyaleView {
     int matchWinner = -1;
     int tricksPlayed = 0;
     int playerCount = 0;
+    bool canRaise = false;
     std::array<RoyaleSeatView, kRoyaleMaxPlayers> seats{};
     std::array<Card, 3> own{};
     std::array<bool, 3> playedOwn{};

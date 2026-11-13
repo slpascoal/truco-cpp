@@ -499,6 +499,7 @@ std::string encodeRoyaleState(const RoyaleView& view) {
     line += ' ' + std::to_string(view.matchWinner);
     line += ' ' + std::to_string(view.tricksPlayed);
     line += ' ' + std::to_string(view.playerCount);
+    line += ' ' + std::string(view.canRaise ? "1" : "0");
     for (int i = 0; i < view.playerCount; ++i) {
         const RoyaleSeatView& seat = view.seats.at(static_cast<size_t>(i));
         line += ' ' + std::to_string(seat.points);
@@ -543,6 +544,9 @@ bool decodeRoyaleState(const std::string& line, RoyaleView& out) {
     if (!parseSigned(f[index++], -1, kRoyaleMaxPlayers - 1, view.matchWinner)) return false;
     if (!parseInt(f[index++], 0, 3, view.tricksPlayed)) return false;
     if (!parseInt(f[index++], 3, kRoyaleMaxPlayers, view.playerCount)) return false;
+    int canRaise = 0;
+    if (index >= f.size() || !parseInt(f[index++], 0, 1, canRaise)) return false;
+    view.canRaise = canRaise == 1;
 
     for (int i = 0; i < view.playerCount; ++i) {
         RoyaleSeatView& seat = view.seats.at(static_cast<size_t>(i));
