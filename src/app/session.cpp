@@ -1192,7 +1192,7 @@ void Session::refreshView() {
         switch (sync.phase) {
             case NetPhase::Play:
                 if (sync.turn == localSide()) {
-                    view_.actions = sync.stake < 12
+                    view_.actions = sync.canRaise
                                         ? std::vector<std::string>{"Jogar", "Truco!"}
                                         : std::vector<std::string>{"Jogar"};
                 }

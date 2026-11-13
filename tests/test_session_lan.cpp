@@ -247,6 +247,35 @@ TEST(lan_guest_truco_intent_reaches_host_dialog) {
     CHECK_EQ(static_cast<int>(pair.host.game().stake()), 3);
 }
 
+TEST(lan_guest_cannot_raise_after_own_truco_is_accepted) {
+    LanPair pair;
+    CHECK(pair.start());
+    CHECK(pair.pumpUntil(hostTurnPlays));
+    pair.host.selectCard(0);
+    pair.host.confirmSelection();
+    CHECK(pair.pumpUntil(guestTurnPlays));
+    pair.guest.activateAction(1);
+    bool hostDialog = false;
+    for (int i = 0; i < 200 && !hostDialog; ++i) {
+        pair.pump(1);
+        hostDialog = pair.host.state() == SessionState::TrucoDialog &&
+                     !pair.host.view().actions.empty();
+    }
+    CHECK(hostDialog);
+    pair.host.activateAction(0);
+    bool guestPlaying = false;
+    for (int i = 0; i < 200 && !guestPlaying; ++i) {
+        pair.pump(1);
+        guestPlaying = pair.guest.state() == SessionState::HumanTurn &&
+                       pair.guest.guestSync().phase == NetPhase::Play;
+    }
+    CHECK(guestPlaying);
+    CHECK(!pair.guest.guestSync().canRaise);
+    for (const std::string& action : pair.guest.view().actions) {
+        CHECK(action != "Truco!");
+    }
+}
+
 TEST(lan_full_match_reaches_match_end_on_both_sides) {
     LanPair pair;
     CHECK(pair.start());
