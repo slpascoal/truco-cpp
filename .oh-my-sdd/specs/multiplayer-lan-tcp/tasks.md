@@ -66,7 +66,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
         4. `make test` verde
       rastreia: Req-01, Req-05, Req-20, Req-21, Req-23
 
-- [ ] 6. Sessão LanHost: menu, configuração, espera, handshake e início
+- [x] 6. Sessão LanHost: menu, configuração, espera, handshake e início
       altera: `src/app/session.{hpp,cpp}`, `tests/test_session_lan_host.cpp`
       consome: tarefas 1–5
       produz: `GameMode::{LanHost,LanGuest}`, `SessionState::{LanConfig,LanWaiting,LanError}`, menu de 5 ações, `openLanConfig`, `confirmLanConfig`, `cancelLan`, `startMatchAndBroadcast`, `broadcastSync`, `broadcastMessage`, `makeSync`, `pumpHost`
@@ -78,7 +78,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
         4. `make test` verde
       rastreia: Req-01, Req-02, Req-05, Req-06, Req-08
 
-- [ ] 7. Sessão LanHost: intenções do convidado e fluxo completo
+- [x] 7. Sessão LanHost: intenções do convidado e fluxo completo
       altera: `src/app/session.{hpp,cpp}`, `tests/test_session_lan_host.cpp`
       consome: tarefa 6
       produz: `applyGuestIntent`, fases `PLAY/TRUCO_ANSWER/ELEVEN/HANDEND/MATCHEND`, broadcasts após cada mutação, tratamento de desconexão e `REMATCH`
@@ -90,7 +90,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
         4. `make test` verde
       rastreia: Req-11, Req-12, Req-13, Req-14, Req-15, Req-16, Req-17, Req-19
 
-- [ ] 8. Sessão LanGuest: conexão, espelho e intenções
+- [x] 8. Sessão LanGuest: conexão, espelho e intenções
       altera: `src/app/session.{hpp,cpp}`, `tests/test_session_lan_guest.cpp`
       consome: tarefas 6–7
       produz: conexão por IP/porta, aplicação de `SYNC`/`MSG`/`ERROR`, `sendIntent`, render a partir de `SyncState`, `LanError` em queda
@@ -102,7 +102,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
         4. `make test` verde
       rastreia: Req-09, Req-10, Req-11, Req-14, Req-16, Req-17, Req-22
 
-- [ ] 9. Partida completa em loopback
+- [x] 9. Partida completa em loopback
       altera: `tests/test_lan_match.cpp`
       consome: tarefas 6–8
       produz: teste de integração de host e guest no mesmo processo, dirigidos por `tick`, até `MATCHEND`

@@ -79,6 +79,8 @@ SyncState sampleSync(bool revealed) {
     sync.turn = Side::Cpu;
     sync.phase = NetPhase::Play;
     sync.stake = 3;
+    sync.tricksHuman = 1;
+    sync.tricksCpu = 0;
     sync.scoreHuman = 5;
     sync.scoreCpu = 9;
     sync.handKind = HandKind::Normal;
@@ -140,10 +142,10 @@ TEST(protocol_sync_hides_opponent_hand_until_revealed) {
 TEST(protocol_sync_rejects_bad_fields) {
     SyncState parsed;
     CHECK(!decodeSync("SYNC 1", parsed));
-    CHECK(!decodeSync("SYNC 1 J1 J1 PLAY 3 0 0 NORMAL 4O 3P 7C AE 1 2 - - 0 J1 - - - extra",
+    CHECK(!decodeSync("SYNC 1 J1 J1 PLAY 3 0 0 0 0 NORMAL 4O 3P 7C AE 1 2 - - 0 J1 - - - extra",
                       parsed));
-    CHECK(!decodeSync("SYNC 1 J9 J1 PLAY 3 0 0 NORMAL 4O 3P 7C AE 1 2 - - 0 J1 - - -", parsed));
-    CHECK(!decodeSync("SYNC 1 J1 J1 PLAY 3 0 0 NORMAL XX 3P 7C AE 1 2 - - 0 J1 - - -", parsed));
+    CHECK(!decodeSync("SYNC 1 J9 J1 PLAY 3 0 0 0 0 NORMAL 4O 3P 7C AE 1 2 - - 0 J1 - - -", parsed));
+    CHECK(!decodeSync("SYNC 1 J1 J1 PLAY 3 0 0 0 0 NORMAL XX 3P 7C AE 1 2 - - 0 J1 - - -", parsed));
 }
 
 TEST(protocol_phase_tokens_roundtrip) {

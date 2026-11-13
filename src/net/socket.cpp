@@ -123,6 +123,7 @@ std::vector<std::string> readLines(int fd, LineReader& reader, bool& closed) {
         return lines;
     }
     char incoming[1024];
+    bool atEnd = false;
     for (;;) {
         const ssize_t got = recv(fd, incoming, sizeof(incoming), 0);
         if (got > 0) {
@@ -130,8 +131,8 @@ std::vector<std::string> readLines(int fd, LineReader& reader, bool& closed) {
             continue;
         }
         if (got == 0) {
-            closed = true;
-            return lines;
+            atEnd = true;
+            break;
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             break;
@@ -139,8 +140,8 @@ std::vector<std::string> readLines(int fd, LineReader& reader, bool& closed) {
         if (errno == EINTR) {
             continue;
         }
-        closed = true;
-        return lines;
+        atEnd = true;
+        break;
     }
 
     for (;;) {
@@ -165,6 +166,9 @@ std::vector<std::string> readLines(int fd, LineReader& reader, bool& closed) {
             continue;
         }
         lines.push_back(line);
+    }
+    if (atEnd) {
+        closed = true;
     }
     return lines;
 }

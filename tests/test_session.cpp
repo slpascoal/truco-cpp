@@ -31,14 +31,14 @@ TEST(session_starts_at_menu) {
     Session session(7);
     session.start();
     CHECK(session.state() == SessionState::Menu);
-    CHECK_EQ(session.view().actions.size(), size_t{3});
+    CHECK_EQ(session.view().actions.size(), size_t{5});
     CHECK_EQ(session.view().actions[0], std::string("Jogar vs CPU"));
 }
 
 TEST(session_menu_exit_stops_running) {
     Session session(8);
     session.start();
-    session.activateAction(2);
+    session.activateAction(4);
     CHECK(!session.running());
 }
 
@@ -189,7 +189,7 @@ TEST(session_dealing_animation_state_is_visible) {
 TEST(hotseat_menu_has_three_options) {
     Session session(30);
     session.start();
-    CHECK_EQ(session.view().actions.size(), size_t{3});
+    CHECK_EQ(session.view().actions.size(), size_t{5});
     CHECK_EQ(session.view().actions[1], std::string("Jogar 2 jogadores"));
     session.activateAction(1);
     CHECK(session.mode() == GameMode::Hotseat);

@@ -55,6 +55,8 @@ struct SyncState {
     Side turn = Side::Human;
     NetPhase phase = NetPhase::Wait;
     int stake = 1;
+    int tricksHuman = 0;
+    int tricksCpu = 0;
     int scoreHuman = 0;
     int scoreCpu = 0;
     HandKind handKind = HandKind::Normal;

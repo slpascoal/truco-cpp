@@ -356,6 +356,8 @@ std::string encodeSync(const SyncState& sync) {
     line += ' ' + sideToken(sync.turn);
     line += ' ' + phaseToken(sync.phase);
     line += ' ' + std::to_string(sync.stake);
+    line += ' ' + std::to_string(sync.tricksHuman);
+    line += ' ' + std::to_string(sync.tricksCpu);
     line += ' ' + std::to_string(sync.scoreHuman);
     line += ' ' + std::to_string(sync.scoreCpu);
     line += ' ' + kindToken(sync.handKind);
@@ -379,7 +381,7 @@ std::string encodeSync(const SyncState& sync) {
 
 bool decodeSync(const std::string& line, SyncState& out) {
     const Message message = parseLine(line);
-    if (message.type != MessageType::Sync || message.fields.size() != 21) {
+    if (message.type != MessageType::Sync || message.fields.size() != 23) {
         return false;
     }
     const std::vector<std::string>& f = message.fields;
@@ -393,26 +395,28 @@ bool decodeSync(const std::string& line, SyncState& out) {
     int stake = 0;
     if (!parseInt(f[4], 1, 12, stake)) return false;
     sync.stake = stake;
-    if (!parseInt(f[5], 0, 99, sync.scoreHuman)) return false;
-    if (!parseInt(f[6], 0, 99, sync.scoreCpu)) return false;
-    if (!kindFromToken(f[7], sync.handKind)) return false;
-    if (!cardFromToken(f[8], sync.vira)) return false;
+    if (!parseInt(f[5], 0, 3, sync.tricksHuman)) return false;
+    if (!parseInt(f[6], 0, 3, sync.tricksCpu)) return false;
+    if (!parseInt(f[7], 0, 99, sync.scoreHuman)) return false;
+    if (!parseInt(f[8], 0, 99, sync.scoreCpu)) return false;
+    if (!kindFromToken(f[9], sync.handKind)) return false;
+    if (!cardFromToken(f[10], sync.vira)) return false;
     for (int i = 0; i < 3; ++i) {
-        if (!cardFromToken(f[9 + static_cast<size_t>(i)],
+        if (!cardFromToken(f[11 + static_cast<size_t>(i)],
                            sync.own[static_cast<size_t>(i)])) {
             return false;
         }
     }
-    if (!parseMask(f[12], sync.playedOwn)) return false;
-    if (!parseMask(f[13], sync.playedOpponent)) return false;
-    if (!parseTrick(f[14], sync.trickOwn)) return false;
-    if (!parseTrick(f[15], sync.trickOpponent)) return false;
+    if (!parseMask(f[14], sync.playedOwn)) return false;
+    if (!parseMask(f[15], sync.playedOpponent)) return false;
+    if (!parseTrick(f[16], sync.trickOwn)) return false;
+    if (!parseTrick(f[17], sync.trickOpponent)) return false;
     int revealed = 0;
-    if (!parseInt(f[16], 0, 1, revealed)) return false;
+    if (!parseInt(f[18], 0, 1, revealed)) return false;
     sync.revealed = revealed == 1;
-    if (!sideFromToken(f[17], sync.elevenSide)) return false;
+    if (!sideFromToken(f[19], sync.elevenSide)) return false;
     for (int i = 0; i < 3; ++i) {
-        const std::string& token = f[18 + static_cast<size_t>(i)];
+        const std::string& token = f[20 + static_cast<size_t>(i)];
         if (sync.revealed) {
             if (!cardFromToken(token, sync.opponent[static_cast<size_t>(i)])) {
                 return false;
