@@ -18,7 +18,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. rodar `make test` e confirmar exit 0; rodar `make clean && make`
       rastreia: Critérios de Aceite (build sem warnings), constitution §2
 
-- [ ] 2. Tipos de carta, força, manilha e rótulos
+- [x] 2. Tipos de carta, força, manilha e rótulos
       altera: `src/core/card.hpp`, `src/core/card.cpp`, `tests/test_card.cpp`, `tests/test_main.cpp`
       consome: harness da tarefa 1
       produz: `enum class Suit`, `enum class Rank`, `struct Card`, `commonStrength`, `suitOrder`, `manilhaRank`, `isManilha`, `cardStrength`, `rankLabel`, `suitLabel`, `suitName` (assinaturas do plan §2)
