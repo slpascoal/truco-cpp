@@ -1,7 +1,7 @@
 # Truco Mineiro
 
 Jogo completo de **truco mineiro** para o terminal, em C++17, sem nenhuma dependência externa.
-Baralho de 40 cartas, manilha pela vira, mão de 11, mão de ferro, truco/seis/nove/doze e uma CPU
+Baralho de 40 cartas, manilha fixa, mão de 11, mão de ferro, truco/seis/nove/doze e uma CPU
 que pede truco, corre e blefa.
 
 ```
@@ -76,23 +76,23 @@ jogável só pelo teclado. Tamanho mínimo: **80x24**; abaixo disso o jogo pede 
 ## Regras implementadas
 
 - **Baralho:** 40 cartas (`4,5,6,7,Q,J,K,A,2,3` × `♦ ♠ ♥ ♣`), sem 8, 9 e 10.
-- **Vira e manilha:** a manilha é o valor imediatamente acima da vira, em ciclo
-  (`4→5→6→7→Q→J→K→A→2→3→4`). A vira nunca é distribuída.
-- **Força:** manilhas valem mais que qualquer carta comum, ordenadas por naipe
-  `paus > copas > espadas > ouros`. Cartas comuns seguem `4<5<6<7<Q<J<K<A<2<3`, e o naipe não
-  desempata carta comum.
+- **Manilha fixa:** são manilhas, da mais forte para a mais fraca, `4♣ > 7♥ > A♠ > 7♦`. Nenhuma
+  carta é separada antes da distribuição: as seis cartas da mão vêm do baralho completo.
+- **Força:** manilhas valem mais que qualquer carta comum, na ordem fixa acima. Cartas comuns
+  seguem `4<5<6<7<Q<J<K<A<2<3`, e o naipe não desempata carta comum.
 - **Mão:** 3 cartas cada, quem fizer duas vazas leva. Empate na primeira vaza é decidido pela
   segunda; empate na segunda vaza decide a favor de quem ganhou a primeira; três empates vão para
   quem é mão.
 - **Apostas:** mão vale 1; truco → 3, seis → 6, nove → 9, doze → 12. Quem corre entrega o valor
-  anterior ao adversário, que vê as cartas.
+  anterior ao adversário, que vê as cartas. Depois que um pedido é aceito, só o adversário de quem
+  pediu pode aumentar; o direito alterna a cada aceite.
 - **Partida:** até 12 pontos; o placar exibido trava em 12.
 - **Mão de 11:** com placar exato em 11, o jogador recebe uma carta oculta e escolhe **jogar**
   (mão vale 3) ou **esconder** (mão vale 1); vence quem tiver a carta mais forte contra a melhor
   carta do adversário.
 - **Mão de ferro:** ambos com 11, uma carta oculta para cada lado, vale 3 e não há truco.
 
-A CPU só usa informação pública: as próprias cartas, a vira, as cartas jogadas e o placar. Ela
+A CPU só usa informação pública: as próprias cartas, as cartas jogadas e o placar. Ela
 nunca acessa a mão do jogador — o tipo `PublicView` não tem campo para isso.
 
 ## Estrutura do projeto
