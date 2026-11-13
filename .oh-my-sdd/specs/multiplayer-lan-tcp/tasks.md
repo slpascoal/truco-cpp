@@ -54,7 +54,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
         4. `make test` verde
       rastreia: Req-03, Req-04, Req-06
 
-- [ ] 5. Telas de rede no renderer
+- [x] 5. Telas de rede no renderer
       altera: `src/ui/render.{hpp,cpp}`, `src/app/session.cpp`, `tests/test_render.cpp`
       consome: tarefas 1–2
       produz: `ViewModel::Screen::{LanConfig,LanWaiting,LanError}`, campos `lan*`, desenho com campos/cursor, endereços, erro e botões

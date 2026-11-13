@@ -235,3 +235,53 @@ TEST(render_handoff_screen_hides_cards) {
         CHECK(displayWidth(line) <= 80);
     }
 }
+
+TEST(render_lan_config_screen) {
+    Terminal terminal;
+    Renderer renderer(terminal);
+    ViewModel vm;
+    vm.screen = ViewModel::Screen::LanConfig;
+    vm.lanTitle = "Conectar em partida";
+    vm.lanFieldLabel[0] = "IP do host";
+    vm.lanFieldValue[0] = "192.168.0.10";
+    vm.lanFieldLabel[1] = "Porta";
+    vm.lanFieldValue[1] = "4000";
+    vm.lanFieldFocus = 0;
+    vm.lanHint = "Tab alterna campo";
+    vm.actions = {"Conectar", "Voltar"};
+    const std::string frame = stripAnsi(renderer.render(vm, Size{80, 24}));
+    CHECK(frame.find("Conectar em partida") != std::string::npos);
+    CHECK(frame.find("192.168.0.10") != std::string::npos);
+    CHECK(frame.find("4000") != std::string::npos);
+    CHECK(frame.find("Tab alterna campo") != std::string::npos);
+    CHECK(frame.find("+-------+") == std::string::npos);
+    CHECK_EQ(renderer.hitTargets().size(), size_t{2});
+}
+
+TEST(render_lan_waiting_screen) {
+    Terminal terminal;
+    Renderer renderer(terminal);
+    ViewModel vm;
+    vm.screen = ViewModel::Screen::LanWaiting;
+    vm.lanTitle = "Hospedando partida";
+    vm.lanAddressText = "IP: 192.168.0.10  Porta: 4000";
+    vm.actions = {"Cancelar"};
+    const std::string frame = stripAnsi(renderer.render(vm, Size{80, 24}));
+    CHECK(frame.find("Hospedando partida") != std::string::npos);
+    CHECK(frame.find("192.168.0.10") != std::string::npos);
+    CHECK(frame.find("4000") != std::string::npos);
+    CHECK(frame.find("Aguardando conexao") != std::string::npos);
+}
+
+TEST(render_lan_error_screen) {
+    Terminal terminal;
+    Renderer renderer(terminal);
+    ViewModel vm;
+    vm.screen = ViewModel::Screen::LanError;
+    vm.lanErrorText = "Conexao perdida com o adversario";
+    vm.actions = {"Voltar ao menu"};
+    const std::string frame = stripAnsi(renderer.render(vm, Size{80, 24}));
+    CHECK(frame.find("Conexao encerrada") != std::string::npos);
+    CHECK(frame.find("Conexao perdida com o adversario") != std::string::npos);
+    CHECK_EQ(renderer.hitTargets().size(), size_t{1});
+}

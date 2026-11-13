@@ -212,6 +212,60 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
 
     const Layout layout = Layout::compute(size, static_cast<int>(vm.actions.size()));
 
+    if (vm.screen == ViewModel::Screen::LanConfig) {
+        centeredText(canvas, 3, size.cols, vm.lanTitle, 3);
+        for (int i = 0; i < 2; ++i) {
+            if (vm.lanFieldLabel[i].empty()) continue;
+            const int row = 7 + i * 3;
+            canvas.text(20, row, vm.lanFieldLabel[i] + ":", 7);
+            const std::string value = vm.lanFieldValue[i];
+            const std::string boxed = "[" + value + "]";
+            canvas.text(34, row, boxed, vm.lanFieldFocus == i ? 3 : 7);
+            if (vm.lanFieldFocus == i) {
+                const int cursorX = 35 + static_cast<int>(value.size());
+                canvas.text(cursorX, row, "_", vm.lanFieldFocus == i ? 3 : 7);
+            }
+        }
+        if (!vm.lanHint.empty()) {
+            centeredText(canvas, 15, size.cols, vm.lanHint, 6);
+        }
+        if (!vm.message.empty()) {
+            centeredText(canvas, 17, size.cols, vm.message, 1);
+        }
+        for (size_t i = 0; i < vm.actions.size() && i < 4; ++i) {
+            drawButton(canvas, layout.actions[i], vm.actions[i],
+                       vm.selectedAction == static_cast<int>(i));
+            hitTargets_.push_back({layout.actions[i], 100 + static_cast<int>(i)});
+        }
+        return canvas.toString();
+    }
+
+    if (vm.screen == ViewModel::Screen::LanWaiting) {
+        centeredText(canvas, 4, size.cols, vm.lanTitle, 3);
+        centeredText(canvas, 7, size.cols, "Aguardando conexao do convidado...", 7);
+        if (!vm.lanAddressText.empty()) {
+            centeredText(canvas, 10, size.cols, vm.lanAddressText, 5);
+        }
+        centeredText(canvas, 12, size.cols, "Informe este IP e a porta no outro computador", 7);
+        for (size_t i = 0; i < vm.actions.size() && i < 4; ++i) {
+            drawButton(canvas, layout.actions[i], vm.actions[i],
+                       vm.selectedAction == static_cast<int>(i));
+            hitTargets_.push_back({layout.actions[i], 100 + static_cast<int>(i)});
+        }
+        return canvas.toString();
+    }
+
+    if (vm.screen == ViewModel::Screen::LanError) {
+        centeredText(canvas, 4, size.cols, "Conexao encerrada", 1);
+        centeredText(canvas, 7, size.cols, vm.lanErrorText, 7);
+        for (size_t i = 0; i < vm.actions.size() && i < 4; ++i) {
+            drawButton(canvas, layout.actions[i], vm.actions[i],
+                       vm.selectedAction == static_cast<int>(i));
+            hitTargets_.push_back({layout.actions[i], 100 + static_cast<int>(i)});
+        }
+        return canvas.toString();
+    }
+
     if (vm.screen == ViewModel::Screen::Handoff) {
         centeredText(canvas, 5, size.cols, vm.title, 3);
         centeredText(canvas, 8, size.cols, vm.handoffTitle, 5);

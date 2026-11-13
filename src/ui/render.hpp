@@ -13,7 +13,7 @@
 namespace truco {
 
 struct ViewModel {
-    enum class Screen { Menu, Handoff, Game, MatchResult };
+    enum class Screen { Menu, Handoff, Game, MatchResult, LanConfig, LanWaiting, LanError };
 
     Screen screen = Screen::Menu;
     std::string title = "TRUCO MINEIRO";
@@ -24,6 +24,14 @@ struct ViewModel {
     std::string handoffText;
     std::string humanTrickLabel = "VOCE";
     std::string cpuTrickLabel = "CPU";
+
+    std::string lanTitle;
+    std::string lanFieldLabel[2];
+    std::string lanFieldValue[2];
+    int lanFieldFocus = -1;
+    std::string lanHint;
+    std::string lanAddressText;
+    std::string lanErrorText;
 
     std::array<Card, 3> humanCards{};
     std::array<bool, 3> humanPlayed{};
