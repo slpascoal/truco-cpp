@@ -42,7 +42,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde
       rastreia: Req-01, Req-02, Req-06
 
-- [ ] 4. Resolução de vazas e da mão com empates
+- [x] 4. Resolução de vazas e da mão com empates
       altera: `src/core/hand.hpp`, `src/core/hand.cpp`, `tests/test_hand.cpp`
       consome: `cardStrength`, `Card`, `Rank`
       produz: `enum class Side`, `enum class TrickOutcome`, `trickWinner()`, `class HandProgress`, `resolveHandWinner()`
