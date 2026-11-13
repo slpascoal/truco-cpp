@@ -95,6 +95,8 @@ TEST(render_game_screen_fits_eighty_columns) {
     Terminal terminal;
     Renderer renderer(terminal);
     const std::string frame = stripAnsi(renderer.render(gameView(), Size{80, 24}));
+    CHECK(frame.find("MAO VALE 3") != std::string::npos);
+    CHECK(frame.find("Sua vez") != std::string::npos);
     const std::vector<std::string> lines = splitLines(frame);
     CHECK_EQ(lines.size(), size_t{24});
     for (const std::string& line : lines) {

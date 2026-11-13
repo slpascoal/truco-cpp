@@ -259,7 +259,7 @@ std::string Renderer::render(const ViewModel& vm, Size size) {
         centeredText(canvas, 1, size.cols, vm.stakeText, 5);
     }
     if (!vm.turnText.empty()) {
-        centeredText(canvas, 2, size.cols, vm.turnText, 6);
+        canvas.text(1, 2, vm.turnText, 6);
     }
     if (!vm.trickText.empty()) {
         canvas.text(1, 3, vm.trickText, 7);
