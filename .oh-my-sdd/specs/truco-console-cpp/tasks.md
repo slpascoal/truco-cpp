@@ -30,7 +30,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde
       rastreia: Req-01, Req-03, Req-04, Req-05
 
-- [ ] 3. Baralho, embaralhamento e distribuição
+- [x] 3. Baralho, embaralhamento e distribuição
       altera: `src/core/deck.hpp`, `src/core/deck.cpp`, `tests/test_deck.cpp`
       consome: `Card`, `Rank`, `Suit`, `std::mt19937`
       produz: `buildDeck()`, `shuffleDeck()`, `struct Deal`, `deal(std::mt19937&)`
