@@ -78,7 +78,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde
       rastreia: Req-08, Req-10, Req-11, Req-12–Req-20
 
-- [ ] 7. IA da CPU
+- [x] 7. IA da CPU
       altera: `src/ai/cpu_player.hpp`, `src/ai/cpu_player.cpp`, `tests/test_ai.cpp`
       consome: `core` + `struct PublicView`
       produz: `PublicView`, `chooseCardIndex`, `shouldCallTruco`, `shouldAcceptTruco`, `shouldPlayHandOfEleven`
