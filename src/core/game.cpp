@@ -40,6 +40,8 @@ void Game::resetHand() {
     pending_ = false;
     caller_ = Side::Human;
     pendingStake_ = Stake::One;
+    hasRaiser_ = false;
+    raiser_ = Side::Human;
     awaitingEleven_ = false;
     elevenSide_ = Side::Human;
     finished_ = false;
@@ -102,6 +104,9 @@ bool Game::canCallTruco(Side side) const {
     if (side != currentTurn_) {
         return false;
     }
+    if (hasRaiser_ && side == raiser_) {
+        return false;
+    }
     return canRaise(stake_);
 }
 
@@ -111,6 +116,8 @@ void Game::callTruco(Side side) {
     }
     pending_ = true;
     caller_ = side;
+    raiser_ = side;
+    hasRaiser_ = true;
     pendingStake_ = nextStake(stake_);
 }
 

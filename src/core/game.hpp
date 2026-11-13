@@ -86,6 +86,8 @@ private:
     bool pending_ = false;
     Side caller_ = Side::Human;
     Stake pendingStake_ = Stake::One;
+    bool hasRaiser_ = false;
+    Side raiser_ = Side::Human;
     bool awaitingEleven_ = false;
     Side elevenSide_ = Side::Human;
     bool finished_ = true;

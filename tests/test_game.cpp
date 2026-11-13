@@ -121,24 +121,36 @@ TEST(game_truco_run_awards_previous_stake_to_caller) {
     CHECK(game.revealed());
 }
 
-TEST(game_escalates_to_twelve_then_blocks) {
+TEST(game_truco_caller_cannot_raise_after_accept) {
     std::mt19937 rng(8);
     Game game = makeGame(rng);
-    const int expected[] = {3, 6, 9, 12};
-    for (int value : expected) {
-        CHECK(game.canCallTruco(Side::Human));
-        game.callTruco(Side::Human);
-        game.respondTruco(Side::Cpu, true);
-        CHECK_EQ(static_cast<int>(game.stake()), value);
-    }
+    CHECK(game.canCallTruco(Side::Human));
+    game.callTruco(Side::Human);
+    game.respondTruco(Side::Cpu, true);
     CHECK(!game.canCallTruco(Side::Human));
-    bool threw = false;
-    try {
-        game.callTruco(Side::Human);
-    } catch (const std::exception&) {
-        threw = true;
+    game.playCard(Side::Human, 0);
+    CHECK(game.currentTurn() == Side::Cpu);
+    CHECK(game.canCallTruco(Side::Cpu));
+    game.callTruco(Side::Cpu);
+    CHECK_EQ(static_cast<int>(game.pendingStake()), 6);
+    game.respondTruco(Side::Human, true);
+    CHECK(!game.canCallTruco(Side::Cpu));
+}
+
+TEST(game_truco_right_resets_on_new_hand) {
+    std::mt19937 rng(9);
+    Game game = makeGame(rng);
+    game.callTruco(Side::Human);
+    game.respondTruco(Side::Cpu, true);
+    int guard = 0;
+    while (!game.handFinished() && guard++ < 10) {
+        game.playCard(game.currentTurn(), firstUnplayed(game, game.currentTurn()));
     }
-    CHECK(threw);
+    CHECK(game.handFinished());
+    if (!game.matchOver()) {
+        game.startHand();
+        CHECK(game.canCallTruco(game.currentTurn()));
+    }
 }
 
 TEST(game_cannot_call_truco_out_of_turn) {
