@@ -18,7 +18,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
         4. `make test` verde
       rastreia: Req-20, Req-03
 
-- [ ] 2. Protocolo de linha e snapshot SYNC
+- [x] 2. Protocolo de linha e snapshot SYNC
       altera: `src/net/protocol.{hpp,cpp}`, `tests/test_protocol.cpp`
       consome: `core::Card`, `core::HandKind`, `Side`
       produz: `MessageType`, `Message`, `parseLine`, `encodeLine`, `cardToken/cardFromToken`, `sideToken/sideFromToken`, `NetPhase`, `SyncState`, `encodeSync`, `decodeSync`

@@ -9,7 +9,8 @@ CORE_SRC := $(wildcard src/core/*.cpp)
 AI_SRC := $(wildcard src/ai/*.cpp)
 UI_SRC := $(wildcard src/ui/*.cpp)
 APP_SRC := $(wildcard src/app/*.cpp)
-COMMON_SRC := $(CORE_SRC) $(AI_SRC) $(UI_SRC) $(APP_SRC)
+NET_SRC := $(wildcard src/net/*.cpp)
+COMMON_SRC := $(CORE_SRC) $(AI_SRC) $(UI_SRC) $(APP_SRC) $(NET_SRC)
 MAIN_SRC := src/main.cpp
 TEST_SRC := $(wildcard tests/*.cpp)
 
