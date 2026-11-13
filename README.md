@@ -1,4 +1,4 @@
-# Truco Mineiro — console C++ (você vs computador)
+# Truco Mineiro
 
 Jogo completo de **truco mineiro** para o terminal, em C++17, sem nenhuma dependência externa.
 Baralho de 40 cartas, manilha pela vira, mão de 11, mão de ferro, truco/seis/nove/doze e uma CPU
