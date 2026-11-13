@@ -146,7 +146,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
       passos: reduzido (documentação) — justificativa: sem lógica testável; verificação é executar os comandos documentados
       rastreia: Critérios de Aceite (todos), constitution §7
 
-- [ ] 13. Auditoria de diff
+- [x] 13. Auditoria de diff
       altera: —
       consome: histórico de commits das tarefas 1–12
       produz: relatório de conformidade escopo × diff
