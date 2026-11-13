@@ -42,7 +42,7 @@ Convenções: `make test` verde e commit por tarefa; `altera:` é contrato de es
         4. `make test` verde
       rastreia: Req-02, Req-04, Req-07, Req-17, Req-18
 
-- [ ] 4. Transporte do convidado e handshake entre host e guest
+- [x] 4. Transporte do convidado e handshake entre host e guest
       altera: `src/net/guest_client.{hpp,cpp}`, `tests/test_net_guest.cpp`
       consome: tarefas 2–3
       produz: `GuestClient::connectTo/connected/sendLine/readLines/disconnected/close`
