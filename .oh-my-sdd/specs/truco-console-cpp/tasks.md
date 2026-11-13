@@ -6,7 +6,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
 
 ## Tasks
 
-- [ ] 1. Build skeleton e harness de testes
+- [x] 1. Build skeleton e harness de testes
       altera: `Makefile`, `src/main.cpp`, `tests/test_main.cpp`, `.gitignore`
       consome: —
       produz: alvos `all/run/test/clean`; macros `CHECK(cond)`, `CHECK_EQ(a,b)`, `TEST(name)`; `int test_main()`
