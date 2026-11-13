@@ -242,3 +242,109 @@ TEST(royale_disconnect_eliminates_without_charge) {
     CHECK(match.phase() == RoyalePhase::MatchEnd);
     CHECK_EQ(match.matchWinner(), 0);
 }
+
+TEST(royale_truco_asks_each_opponent_and_grants_raise_rights) {
+    std::mt19937 rng(12);
+    RoyaleMatch match(3, rng);
+    CHECK(match.canCallTruco(0));
+    CHECK(!match.canCallTruco(1));
+    match.callTruco(0);
+    CHECK(match.trucoPending());
+    CHECK_EQ(match.trucoCaller(), 0);
+    CHECK_EQ(match.trucoResponder(), 1);
+    CHECK_EQ(match.pendingValue(), 3);
+    match.respondTruco(true);
+    CHECK_EQ(match.trucoResponder(), 2);
+    match.respondTruco(true);
+    CHECK(!match.trucoPending());
+    CHECK(match.phase() == RoyalePhase::Playing);
+    CHECK_EQ(match.handValue(), 3);
+    CHECK(!match.raiseAllowed(0));
+    CHECK(match.raiseAllowed(1));
+    CHECK(match.raiseAllowed(2));
+}
+
+TEST(royale_running_pays_pending_value_and_leaves_hand) {
+    std::mt19937 rng(13);
+    RoyaleMatch match(3, rng);
+    match.callTruco(0);
+    match.respondTruco(false);
+    CHECK_EQ(match.seat(1).points, 9);
+    CHECK(!match.seat(1).inHand);
+    CHECK(!match.seat(1).eliminated);
+    CHECK_EQ(match.trucoResponder(), 2);
+}
+
+TEST(royale_running_can_eliminate_and_answers_continue) {
+    std::mt19937 rng(14);
+    RoyaleMatch match(3, rng);
+    match.setPointsForTesting(1, 2);
+    match.callTruco(0);
+    match.respondTruco(false);
+    CHECK(match.seat(1).eliminated);
+    CHECK_EQ(match.aliveCount(), 2);
+    CHECK_EQ(match.trucoResponder(), 2);
+    CHECK(match.phase() == RoyalePhase::TrucoAnswer);
+}
+
+TEST(royale_all_opponents_running_ends_hand_for_caller) {
+    std::mt19937 rng(15);
+    RoyaleMatch match(3, rng);
+    match.callTruco(0);
+    match.respondTruco(false);
+    match.respondTruco(false);
+    CHECK(match.phase() == RoyalePhase::HandEnd);
+    CHECK_EQ(match.handWinner(), 0);
+    CHECK_EQ(match.seat(1).points, 9);
+    CHECK_EQ(match.seat(2).points, 9);
+    CHECK_EQ(match.seat(0).points, 12);
+}
+
+TEST(royale_caller_cannot_raise_but_acceptors_can) {
+    std::mt19937 rng(16);
+    RoyaleMatch match(3, rng);
+    match.callTruco(0);
+    match.respondTruco(true);
+    match.respondTruco(true);
+    match.playCard(0, 0);
+    CHECK_EQ(match.currentTurn(), 1);
+    CHECK(!match.canCallTruco(0));
+    CHECK(match.canCallTruco(1));
+
+    match.callTruco(1);
+    CHECK_EQ(match.pendingValue(), 6);
+    CHECK_EQ(match.trucoResponder(), 2);
+    match.respondTruco(true);
+    CHECK_EQ(match.trucoResponder(), 0);
+    match.respondTruco(true);
+    CHECK_EQ(match.handValue(), 6);
+    CHECK(!match.raiseAllowed(1));
+    CHECK(match.raiseAllowed(0));
+    CHECK(match.raiseAllowed(2));
+}
+
+TEST(royale_play_is_blocked_while_truco_pending) {
+    std::mt19937 rng(17);
+    RoyaleMatch match(3, rng);
+    match.callTruco(0);
+    bool threw = false;
+    try {
+        match.playCard(0, 0);
+    } catch (const std::exception&) {
+        threw = true;
+    }
+    CHECK(threw);
+    CHECK(match.phase() == RoyalePhase::TrucoAnswer);
+}
+
+TEST(royale_runner_does_not_get_raise_right) {
+    std::mt19937 rng(18);
+    RoyaleMatch match(3, rng);
+    match.callTruco(0);
+    match.respondTruco(false);
+    match.respondTruco(true);
+    CHECK_EQ(match.handValue(), 3);
+    CHECK(!match.raiseAllowed(1));
+    CHECK(!match.raiseAllowed(0));
+    CHECK(match.raiseAllowed(2));
+}

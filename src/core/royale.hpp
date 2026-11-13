@@ -48,6 +48,15 @@ public:
     int handValue() const { return valuePoints(handValue_); }
     bool matchOver() const { return phase_ == RoyalePhase::MatchEnd; }
 
+    bool trucoPending() const { return pending_; }
+    int trucoCaller() const { return pending_ ? caller_ : -1; }
+    int trucoResponder() const;
+    int pendingValue() const;
+    bool raiseAllowed(int seat) const;
+    bool canCallTruco(int seat) const;
+    void callTruco(int seat);
+    void respondTruco(bool accept);
+
     void startHand();
     void removePlayer(int seat);
 
@@ -66,6 +75,7 @@ private:
     void finishHandFromTricks();
     void finishHand(int winner);
     void checkMatchEnd();
+    void closeTrucoIfDone();
     void clearTable();
 
     std::mt19937& rng_;
@@ -80,6 +90,13 @@ private:
     int handWinner_ = -1;
     int matchWinner_ = -1;
     Stake handValue_ = Stake::One;
+    bool pending_ = false;
+    int caller_ = -1;
+    Stake pendingValue_ = Stake::One;
+    std::vector<int> responders_;
+    size_t responderIndex_ = 0;
+    std::vector<int> accepted_;
+    std::array<bool, kRoyaleMaxPlayers> raiseAllowed_{};
 };
 
 }  // namespace truco

@@ -83,6 +83,15 @@ void RoyaleMatch::startHand() {
     tricksPlayed_ = 0;
     handWinner_ = -1;
     handValue_ = Stake::One;
+    pending_ = false;
+    caller_ = -1;
+    pendingValue_ = Stake::One;
+    responders_.clear();
+    accepted_.clear();
+    responderIndex_ = 0;
+    for (int i = 0; i < kRoyaleMaxPlayers; ++i) {
+        raiseAllowed_[static_cast<size_t>(i)] = true;
+    }
 }
 
 void RoyaleMatch::resetSeatsForHand() {
@@ -285,6 +294,37 @@ void RoyaleMatch::removePlayer(int s) {
         if (allPlayed) {
             resolveTrick();
         }
+    } else if (phase_ == RoyalePhase::TrucoAnswer) {
+        if (s == caller_) {
+            pending_ = false;
+            phase_ = RoyalePhase::Playing;
+            accepted_.clear();
+            responders_.clear();
+            responderIndex_ = 0;
+            currentTurn_ = nextInHand(s);
+            if (inHandCount() <= 1) {
+                const int remaining = nextInHand(s);
+                finishHand(remaining);
+                return;
+            }
+        } else {
+            const auto it = std::find(responders_.begin(), responders_.end(), s);
+            if (it != responders_.end()) {
+                const size_t position = static_cast<size_t>(it - responders_.begin());
+                responders_.erase(it);
+                if (position < responderIndex_) {
+                    --responderIndex_;
+                }
+            }
+            accepted_.erase(std::remove(accepted_.begin(), accepted_.end(), s),
+                            accepted_.end());
+            if (inHandCount() <= 1) {
+                const int remaining = nextInHand(s);
+                finishHand(remaining);
+                return;
+            }
+            closeTrucoIfDone();
+        }
     }
     checkMatchEnd();
 }
@@ -307,6 +347,99 @@ void RoyaleMatch::setPointsForTesting(int s, int points) {
         throw std::out_of_range("seat out of range");
     }
     seats_[static_cast<size_t>(s)].points = points;
+}
+
+int RoyaleMatch::trucoResponder() const {
+    if (!pending_ || responderIndex_ >= responders_.size()) {
+        return -1;
+    }
+    return responders_[responderIndex_];
+}
+
+int RoyaleMatch::pendingValue() const {
+    return pending_ ? valuePoints(pendingValue_) : handValue();
+}
+
+bool RoyaleMatch::raiseAllowed(int s) const {
+    return seatValid(s) && raiseAllowed_[static_cast<size_t>(s)];
+}
+
+bool RoyaleMatch::canCallTruco(int s) const {
+    if (phase_ != RoyalePhase::Playing || pending_ || !seatValid(s)) {
+        return false;
+    }
+    const RoyaleSeat& player = seats_[static_cast<size_t>(s)];
+    if (!player.inHand || player.eliminated || s != currentTurn_) {
+        return false;
+    }
+    return canRaise(handValue_) && raiseAllowed_[static_cast<size_t>(s)];
+}
+
+void RoyaleMatch::callTruco(int s) {
+    if (!canCallTruco(s)) {
+        throw std::logic_error("truco not allowed now");
+    }
+    pending_ = true;
+    caller_ = s;
+    pendingValue_ = nextStake(handValue_);
+    responders_.clear();
+    accepted_.clear();
+    responderIndex_ = 0;
+    for (int step = 1; step < playerCount_; ++step) {
+        const int candidate = (s + step) % playerCount_;
+        if (seats_[static_cast<size_t>(candidate)].inHand) {
+            responders_.push_back(candidate);
+        }
+    }
+    phase_ = RoyalePhase::TrucoAnswer;
+    if (responders_.empty()) {
+        finishHand(s);
+    }
+}
+
+void RoyaleMatch::respondTruco(bool accept) {
+    if (phase_ != RoyalePhase::TrucoAnswer || responderIndex_ >= responders_.size()) {
+        throw std::logic_error("no truco answer expected");
+    }
+    const int responder = responders_[responderIndex_];
+    RoyaleSeat& player = seats_[static_cast<size_t>(responder)];
+    if (accept) {
+        accepted_.push_back(responder);
+    } else {
+        player.points -= valuePoints(pendingValue_);
+        player.inHand = false;
+        if (player.points <= 0) {
+            player.eliminated = true;
+        }
+    }
+    ++responderIndex_;
+
+    if (inHandCount() <= 1) {
+        int remaining = -1;
+        for (int i = 0; i < playerCount_; ++i) {
+            if (seats_[static_cast<size_t>(i)].inHand) {
+                remaining = i;
+                break;
+            }
+        }
+        finishHand(remaining);
+        return;
+    }
+    closeTrucoIfDone();
+}
+
+void RoyaleMatch::closeTrucoIfDone() {
+    if (!pending_ || responderIndex_ < responders_.size()) {
+        return;
+    }
+    handValue_ = pendingValue_;
+    pending_ = false;
+    for (int i = 0; i < kRoyaleMaxPlayers; ++i) {
+        raiseAllowed_[static_cast<size_t>(i)] =
+            std::find(accepted_.begin(), accepted_.end(), i) != accepted_.end();
+    }
+    phase_ = RoyalePhase::Playing;
+    currentTurn_ = caller_;
 }
 
 }  // namespace truco
