@@ -43,11 +43,18 @@ public:
     int tricksPlayed() const { return tricksPlayed_; }
     int mao() const { return mao_; }
 
+    int handWinner() const { return handWinner_; }
+    int matchWinner() const { return matchWinner_; }
+    int handValue() const { return valuePoints(handValue_); }
+    bool matchOver() const { return phase_ == RoyalePhase::MatchEnd; }
+
     void startHand();
+    void removePlayer(int seat);
 
     // Test seams: plant hands/points so multi-player rules can be exercised
     // deterministically without depending on shuffle output.
     void setHandForTesting(int seat, const std::array<Card, 3>& cards);
+    void setPointsForTesting(int seat, int points);
 
 private:
     int nextAlive(int seat) const;
@@ -56,6 +63,9 @@ private:
     void resetSeatsForHand();
     void dealHands();
     void resolveTrick();
+    void finishHandFromTricks();
+    void finishHand(int winner);
+    void checkMatchEnd();
     void clearTable();
 
     std::mt19937& rng_;
@@ -67,6 +77,9 @@ private:
     int currentTurn_ = -1;
     int tricksPlayed_ = 0;
     bool handStarted_ = false;
+    int handWinner_ = -1;
+    int matchWinner_ = -1;
+    Stake handValue_ = Stake::One;
 };
 
 }  // namespace truco

@@ -126,3 +126,119 @@ TEST(royale_rejects_out_of_turn_and_replayed_cards) {
     }
     CHECK(replay);
 }
+
+TEST(royale_hand_end_charges_losers_and_keeps_winner) {
+    std::mt19937 rng(7);
+    RoyaleMatch match(3, rng);
+    match.setHandForTesting(0, {Card{Rank::Three, Suit::Paus}, Card{Rank::Three, Suit::Copas},
+                                Card{Rank::Ace, Suit::Espadas}});
+    match.setHandForTesting(1, {Card{Rank::Four, Suit::Ouros}, Card{Rank::Five, Suit::Ouros},
+                                Card{Rank::Six, Suit::Ouros}});
+    match.setHandForTesting(2, {Card{Rank::Seven, Suit::Paus}, Card{Rank::Queen, Suit::Paus},
+                                Card{Rank::Jack, Suit::Paus}});
+
+    for (int trick = 0; trick < 3; ++trick) {
+        for (int seat = 0; seat < 3; ++seat) {
+            match.playCard(seat, trick);
+        }
+    }
+
+    CHECK(match.phase() == RoyalePhase::HandEnd);
+    CHECK_EQ(match.handWinner(), 0);
+    CHECK_EQ(match.seat(0).points, 12);
+    CHECK_EQ(match.seat(1).points, 11);
+    CHECK_EQ(match.seat(2).points, 11);
+}
+
+TEST(royale_hand_tiebreak_uses_highest_card) {
+    std::mt19937 rng(8);
+    RoyaleMatch match(3, rng);
+    match.setHandForTesting(0, {Card{Rank::Two, Suit::Paus}, Card{Rank::Four, Suit::Ouros},
+                                Card{Rank::Six, Suit::Ouros}});
+    match.setHandForTesting(1, {Card{Rank::Ace, Suit::Ouros}, Card{Rank::Three, Suit::Copas},
+                                Card{Rank::Five, Suit::Ouros}});
+    match.setHandForTesting(2, {Card{Rank::King, Suit::Paus}, Card{Rank::Jack, Suit::Paus},
+                                Card{Rank::Ace, Suit::Paus}});
+
+    match.playCard(0, 0);
+    match.playCard(1, 0);
+    match.playCard(2, 0);
+    match.playCard(0, 1);
+    match.playCard(1, 1);
+    match.playCard(2, 1);
+    match.playCard(1, 2);
+    match.playCard(2, 2);
+    match.playCard(0, 2);
+
+    CHECK(match.phase() == RoyalePhase::HandEnd);
+    CHECK_EQ(match.seat(0).tricksWon, 1);
+    CHECK_EQ(match.seat(1).tricksWon, 1);
+    CHECK_EQ(match.seat(2).tricksWon, 1);
+    CHECK_EQ(match.handWinner(), 1);
+}
+
+TEST(royale_players_reaching_zero_are_eliminated_and_match_ends) {
+    std::mt19937 rng(9);
+    RoyaleMatch match(3, rng);
+    match.setPointsForTesting(1, 1);
+    match.setPointsForTesting(2, 1);
+    match.setHandForTesting(0, {Card{Rank::Three, Suit::Paus}, Card{Rank::Three, Suit::Copas},
+                                Card{Rank::Ace, Suit::Espadas}});
+    match.setHandForTesting(1, {Card{Rank::Four, Suit::Ouros}, Card{Rank::Five, Suit::Ouros},
+                                Card{Rank::Six, Suit::Ouros}});
+    match.setHandForTesting(2, {Card{Rank::Seven, Suit::Paus}, Card{Rank::Queen, Suit::Paus},
+                                Card{Rank::Jack, Suit::Paus}});
+
+    for (int trick = 0; trick < 3; ++trick) {
+        for (int seat = 0; seat < 3; ++seat) {
+            match.playCard(seat, trick);
+        }
+    }
+
+    CHECK(match.seat(1).eliminated);
+    CHECK(match.seat(2).eliminated);
+    CHECK_EQ(match.aliveCount(), 1);
+    CHECK(match.phase() == RoyalePhase::MatchEnd);
+    CHECK_EQ(match.matchWinner(), 0);
+}
+
+TEST(royale_new_hand_rotates_mao) {
+    std::mt19937 rng(10);
+    RoyaleMatch match(3, rng);
+    CHECK_EQ(match.mao(), 0);
+    match.setHandForTesting(0, {Card{Rank::Three, Suit::Paus}, Card{Rank::Three, Suit::Copas},
+                                Card{Rank::Ace, Suit::Espadas}});
+    match.setHandForTesting(1, {Card{Rank::Four, Suit::Ouros}, Card{Rank::Five, Suit::Ouros},
+                                Card{Rank::Six, Suit::Ouros}});
+    match.setHandForTesting(2, {Card{Rank::Seven, Suit::Paus}, Card{Rank::Queen, Suit::Paus},
+                                Card{Rank::Jack, Suit::Paus}});
+    for (int trick = 0; trick < 3; ++trick) {
+        for (int seat = 0; seat < 3; ++seat) {
+            match.playCard(seat, trick);
+        }
+    }
+    CHECK(match.phase() == RoyalePhase::HandEnd);
+    match.startHand();
+    CHECK(match.phase() == RoyalePhase::Playing);
+    CHECK_EQ(match.mao(), 1);
+    CHECK_EQ(match.handValue(), 1);
+    for (int seat = 0; seat < 3; ++seat) {
+        CHECK(match.seat(seat).inHand);
+        CHECK_EQ(match.seat(seat).tricksWon, 0);
+    }
+}
+
+TEST(royale_disconnect_eliminates_without_charge) {
+    std::mt19937 rng(11);
+    RoyaleMatch match(3, rng);
+    match.removePlayer(1);
+    CHECK(match.seat(1).eliminated);
+    CHECK_EQ(match.seat(1).points, 12);
+    CHECK(!match.seat(1).inHand);
+    CHECK_EQ(match.aliveCount(), 2);
+    CHECK(match.phase() == RoyalePhase::Playing);
+
+    match.removePlayer(2);
+    CHECK(match.phase() == RoyalePhase::MatchEnd);
+    CHECK_EQ(match.matchWinner(), 0);
+}

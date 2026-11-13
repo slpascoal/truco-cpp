@@ -81,6 +81,8 @@ void RoyaleMatch::startHand() {
     trickLeader_ = mao_;
     currentTurn_ = mao_;
     tricksPlayed_ = 0;
+    handWinner_ = -1;
+    handValue_ = Stake::One;
 }
 
 void RoyaleMatch::resetSeatsForHand() {
@@ -175,7 +177,116 @@ void RoyaleMatch::resolveTrick() {
     }
     ++tricksPlayed_;
     clearTable();
+    if (tricksPlayed_ >= kRoyaleCardsPerPlayer) {
+        finishHandFromTricks();
+        return;
+    }
     currentTurn_ = trickLeader_;
+}
+
+void RoyaleMatch::finishHandFromTricks() {
+    int bestTricks = -1;
+    for (int i = 0; i < playerCount_; ++i) {
+        const RoyaleSeat& player = seats_[static_cast<size_t>(i)];
+        if (player.inHand) {
+            bestTricks = std::max(bestTricks, player.tricksWon);
+        }
+    }
+
+    int winner = -1;
+    for (int i = 0; i < playerCount_; ++i) {
+        const RoyaleSeat& player = seats_[static_cast<size_t>(i)];
+        if (!player.inHand || player.tricksWon != bestTricks) {
+            continue;
+        }
+        if (winner < 0) {
+            winner = i;
+            continue;
+        }
+        const RoyaleSeat& current = seats_[static_cast<size_t>(winner)];
+        if (player.bestCard > current.bestCard) {
+            winner = i;
+        } else if (player.bestCard == current.bestCard) {
+            const int distance = (i - mao_ + playerCount_) % playerCount_;
+            const int currentDistance = (winner - mao_ + playerCount_) % playerCount_;
+            if (distance < currentDistance) {
+                winner = i;
+            }
+        }
+    }
+    finishHand(winner);
+}
+
+void RoyaleMatch::finishHand(int winner) {
+    if (phase_ == RoyalePhase::HandEnd || phase_ == RoyalePhase::MatchEnd) {
+        return;
+    }
+    handWinner_ = winner;
+    const int value = valuePoints(handValue_);
+    for (int i = 0; i < playerCount_; ++i) {
+        RoyaleSeat& player = seats_[static_cast<size_t>(i)];
+        if (!player.inHand || i == winner) {
+            continue;
+        }
+        player.points -= value;
+        if (player.points <= 0) {
+            player.eliminated = true;
+            player.inHand = false;
+        }
+    }
+    phase_ = RoyalePhase::HandEnd;
+    currentTurn_ = -1;
+    clearTable();
+    checkMatchEnd();
+}
+
+void RoyaleMatch::checkMatchEnd() {
+    const int alive = aliveCount();
+    if (alive > 1) {
+        return;
+    }
+    phase_ = RoyalePhase::MatchEnd;
+    currentTurn_ = -1;
+    matchWinner_ = -1;
+    for (int i = 0; i < playerCount_; ++i) {
+        if (!seats_[static_cast<size_t>(i)].eliminated) {
+            matchWinner_ = i;
+            break;
+        }
+    }
+}
+
+void RoyaleMatch::removePlayer(int s) {
+    if (!seatValid(s) || seats_[static_cast<size_t>(s)].eliminated) {
+        return;
+    }
+    RoyaleSeat& removed = seats_[static_cast<size_t>(s)];
+    removed.eliminated = true;
+    removed.inHand = false;
+    removed.tableCard.reset();
+
+    if (phase_ == RoyalePhase::Playing) {
+        if (currentTurn_ == s) {
+            currentTurn_ = nextInHand(s);
+        }
+        if (inHandCount() == 1) {
+            const int remaining = nextInHand(s);
+            finishHand(remaining);
+            return;
+        }
+        bool allPlayed = inHandCount() > 0;
+        for (int i = 0; i < playerCount_; ++i) {
+            const RoyaleSeat& other = seats_[static_cast<size_t>(i)];
+            if (other.inHand && !other.tableCard.has_value()) {
+                allPlayed = false;
+                break;
+            }
+        }
+        if (allPlayed) {
+            resolveTrick();
+        }
+    }
+    checkMatchEnd();
 }
 
 void RoyaleMatch::clearTable() {
@@ -189,6 +300,13 @@ void RoyaleMatch::setHandForTesting(int s, const std::array<Card, 3>& cards) {
         throw std::out_of_range("seat out of range");
     }
     seats_[static_cast<size_t>(s)].hand = cards;
+}
+
+void RoyaleMatch::setPointsForTesting(int s, int points) {
+    if (!seatValid(s)) {
+        throw std::out_of_range("seat out of range");
+    }
+    seats_[static_cast<size_t>(s)].points = points;
 }
 
 }  // namespace truco
