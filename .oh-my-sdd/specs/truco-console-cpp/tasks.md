@@ -102,7 +102,7 @@ Convenções: cada tarefa termina em `make test` verde e commit próprio. `alter
         4. `make test` verde; rodar `make run` e sair confirmando terminal intacto (`stty -a` antes/depois)
       rastreia: Req-24, Req-26, Req-31
 
-- [ ] 9. Layout e renderização de cartas e tela
+- [x] 9. Layout e renderização de cartas e tela
       altera: `src/ui/layout.hpp`, `src/ui/layout.cpp`, `src/ui/render.hpp`, `src/ui/render.cpp`, `tests/test_render.cpp`
       consome: `core` types, `Size`, `InputEvent`
       produz: `Rect`, `Layout::compute`, `HitTarget`, `ViewModel`, `Renderer::draw`, `Renderer::renderCard`, `hitTargets`
