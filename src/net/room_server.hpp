@@ -48,7 +48,5 @@ private:
     std::vector<std::unique_ptr<Client>> clients_;
 };
 
-std::vector<std::string> localAddresses();
-
 }  // namespace net
 }  // namespace truco

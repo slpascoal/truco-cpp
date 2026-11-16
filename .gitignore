@@ -1,6 +1,7 @@
 .oh-my-sdd/runtime/
 build/
 truco
+truco.exe
 .DS_Store
 .omc/
 .serena/

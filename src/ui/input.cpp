@@ -3,9 +3,6 @@
 #include <cctype>
 #include <cstdlib>
 
-#include <poll.h>
-#include <unistd.h>
-
 #include "ui/terminal.hpp"
 
 namespace truco {
@@ -209,18 +206,10 @@ InputEvent pollEvent(int timeoutMs) {
         return event;
     }
 
-    struct pollfd descriptor {};
-    descriptor.fd = STDIN_FILENO;
-    descriptor.events = POLLIN;
-    const int ready = poll(&descriptor, 1, timeoutMs);
-    if (ready > 0 && (descriptor.revents & POLLIN) != 0) {
-        char buffer[256];
-        const ssize_t got = ::read(STDIN_FILENO, buffer, sizeof(buffer));
-        if (got > 0) {
-            pending.append(buffer, static_cast<size_t>(got));
-            queue = parseInput(pending);
-            pending.clear();
-        }
+    pending += readInput(timeoutMs);
+    if (!pending.empty()) {
+        queue = parseInput(pending);
+        pending.clear();
     }
 
     if (consumeQuitFlag()) {

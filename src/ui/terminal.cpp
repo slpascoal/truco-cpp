@@ -1,9 +1,13 @@
+// POSIX terminal backend (termios + signals). Windows lives in terminal_win.cpp.
+#ifndef _WIN32
+
 #include "ui/terminal.hpp"
 
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
 
+#include <poll.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
@@ -138,4 +142,22 @@ void Terminal::write(const std::string& text) {
     }
 }
 
+std::string readInput(int timeoutMs) {
+    std::string bytes;
+    struct pollfd descriptor {};
+    descriptor.fd = STDIN_FILENO;
+    descriptor.events = POLLIN;
+    const int ready = poll(&descriptor, 1, timeoutMs);
+    if (ready > 0 && (descriptor.revents & POLLIN) != 0) {
+        char buffer[256];
+        const ssize_t got = ::read(STDIN_FILENO, buffer, sizeof(buffer));
+        if (got > 0) {
+            bytes.assign(buffer, static_cast<size_t>(got));
+        }
+    }
+    return bytes;
+}
+
 }  // namespace truco
+
+#endif  // !_WIN32
