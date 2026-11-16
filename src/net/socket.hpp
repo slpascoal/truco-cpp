@@ -22,9 +22,19 @@ uint16_t boundPort(int fd);
 
 int connectTcp(const std::string& ip, uint16_t port, int timeoutMs, std::string& error);
 
+// Accepts one pending connection as a non-blocking socket. Returns -1 when
+// nothing is pending and -2 when the accepted socket could not be configured
+// (it is closed before returning).
+int acceptClient(int listenFd);
+
 void closeFd(int& fd);
 
 bool setNonBlocking(int fd);
+
+bool waitReadable(int fd, int timeoutMs);
+
+// IPv4 addresses of the non-loopback interfaces; falls back to 127.0.0.1.
+std::vector<std::string> localAddresses();
 
 // Appends available bytes, returns complete lines (without '\n'). Lines longer
 // than kMaxWireLine are discarded up to the next newline. Sets closed on EOF or

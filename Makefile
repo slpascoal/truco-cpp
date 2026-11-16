@@ -1,9 +1,21 @@
 CXX ?= g++
 CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic -O2 -MMD -MP -Isrc
-LDFLAGS ?=
 
-BIN := truco
-TEST_BIN := build/tests/runner
+# Windows (MinGW-w64 g++, e.g. MSYS2) needs Winsock and a self-contained .exe.
+# Cross-compiling from Linux works too:
+#   make CXX=x86_64-w64-mingw32-g++-posix OS=Windows_NT
+ifeq ($(OS),Windows_NT)
+EXE := .exe
+LDFLAGS ?= -static
+LDLIBS ?= -lws2_32
+else
+EXE :=
+LDFLAGS ?=
+LDLIBS ?=
+endif
+
+BIN := truco$(EXE)
+TEST_BIN := build/tests/runner$(EXE)
 
 CORE_SRC := $(wildcard src/core/*.cpp)
 AI_SRC := $(wildcard src/ai/*.cpp)
@@ -21,11 +33,11 @@ TEST_OBJ := $(patsubst tests/%.cpp,build/test/%.o,$(TEST_SRC))
 all: $(BIN)
 
 $(BIN): $(COMMON_OBJ) $(MAIN_OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 $(TEST_BIN): $(COMMON_OBJ) $(TEST_OBJ)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 build/obj/%.o: src/%.cpp
 	@mkdir -p $(dir $@)

@@ -2,7 +2,9 @@
 
 #include <string>
 
+#ifndef _WIN32
 #include <termios.h>
+#endif
 
 #include "ui/size.hpp"
 
@@ -26,17 +28,27 @@ private:
     void enter();
     void leave();
 
+#ifdef _WIN32
+    unsigned long originalInputMode_ = 0;
+    unsigned long originalOutputMode_ = 0;
+    unsigned int originalOutputCodePage_ = 0;
+#else
     termios original_{};
+#endif
     bool active_ = false;
     bool mouseSupported_ = false;
     bool mouseEnabled_ = false;
     bool handlerInstalled_ = false;
 };
 
-// True once after a SIGWINCH was received; consumed by the event loop.
+// True once after the terminal was resized; consumed by the event loop.
 bool consumeResizeFlag();
 
-// True once after SIGINT/SIGTERM was received; the loop must exit cleanly.
+// True once after an interrupt/close request; the loop must exit cleanly.
 bool consumeQuitFlag();
+
+// Waits up to timeoutMs for raw input bytes (keys and mouse reports encoded as
+// ANSI sequences). Returns an empty string on timeout.
+std::string readInput(int timeoutMs);
 
 }  // namespace truco

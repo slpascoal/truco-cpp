@@ -9,11 +9,11 @@ Você atua como **Engenheiro C++ Sênior e Arquiteto de Software** especializado
 ## 2. Stack de Tecnologia Não-Negociável
 
 - **Linguagem:** C++17 (`-std=c++17`). Nunca use C puro, Rust, Python ou outra linguagem no núcleo do jogo.
-- **Compilador:** `g++` (GCC 13+) como compilador de referência. Outros compiladores não são alvo de suporte.
+- **Compilador:** `g++` (GCC 13+) como compilador de referência — nativo no Linux e MinGW-w64 no Windows. Outros compiladores (incluindo MSVC) não são alvo de suporte.
 - **Build:** `Makefile` na raiz com os alvos `all` (build), `run` (executa), `test` (testes), `clean`. `cmake` é proibido neste repositório.
-- **Dependências externas:** nenhuma biblioteca de terceiros. `ncurses`, `PDCurses`, `FTXUI` e afins são proibidos — headers ncurses não existem no ambiente e a TUI é implementada sobre ANSI escape sequences + `termios`/`ioctl` + mouse tracking SGR (1006).
-- **Biblioteca padrão:** apenas `<iostream>`, `<string>`, `<vector>`, `<array>`, `<algorithm>`, `<random>`, `<chrono>`, `<termios.h>`, `<unistd.h>`, `<sys/ioctl.h>` e equivalentes POSIX do mesmo nível.
-- **Plataforma alvo:** Linux/POSIX em terminal compatível com ANSI 256 cores. Suporte a Windows não é objetivo.
+- **Dependências externas:** nenhuma biblioteca de terceiros. `ncurses`, `PDCurses`, `FTXUI` e afins são proibidos — headers ncurses não existem no ambiente e a TUI é implementada sobre ANSI escape sequences + mouse tracking SGR (1006), com `termios`/`ioctl` no POSIX e a API de console do Windows (modo virtual terminal) no Windows.
+- **Biblioteca padrão:** apenas `<iostream>`, `<string>`, `<vector>`, `<array>`, `<algorithm>`, `<random>`, `<chrono>`, `<termios.h>`, `<unistd.h>`, `<sys/ioctl.h>` e equivalentes POSIX do mesmo nível; no Windows, apenas `<windows.h>` e Winsock (`ws2_32`), que fazem parte do sistema.
+- **Plataforma alvo:** Linux/POSIX e Windows 10 (1809+)/11, em terminal compatível com ANSI 256 cores. Código específico de plataforma fica isolado em `ui/terminal*.cpp` e `net/socket.cpp`; o restante do código não inclui headers de sistema.
 
 ## 3. Padrões de Código e Arquitetura
 
@@ -62,4 +62,5 @@ Você atua como **Engenheiro C++ Sênior e Arquiteto de Software** especializado
 - Idioma código EN / UI pt-BR e build Makefile + binário de testes: escolha explícita do usuário em 2026-11-13.
 - Seções 6 e 7 derivadas de `knowledge/7-change-hygiene.md`, `knowledge/8-verification-discipline.md` e `knowledge/9-test-first-execution.md`, especializadas para C++/Makefile.
 - Seção 1 e estrutura geral derivadas de `knowledge/6-example-constitution.md` e `knowledge/5-best-practices-constitution.md`.
+- Suporte a Windows + Linux: exigência explícita do usuário em 2026-11-16, substituindo a decisão anterior de alvo apenas POSIX.
 - Nenhuma fonte de projeto existente (`CLAUDE.md` local, `AGENTS.md`, CI, configs de lint) encontrada no repositório — regras de arquitetura e nomenclatura marcadas como `(inferido/definido no bootstrap)`.

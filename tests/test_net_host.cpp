@@ -1,9 +1,6 @@
 #include <chrono>
 #include <thread>
 
-#include <poll.h>
-#include <unistd.h>
-
 #include "net/host_server.hpp"
 #include "net/socket.hpp"
 #include "test_framework.hpp"
@@ -12,13 +9,6 @@ using namespace truco;
 using namespace truco::net;
 
 namespace {
-
-bool waitReadable(int fd, int timeoutMs) {
-    pollfd descriptor{};
-    descriptor.fd = fd;
-    descriptor.events = POLLIN;
-    return poll(&descriptor, 1, timeoutMs) > 0;
-}
 
 bool readUntilLine(int fd, LineReader& reader, const std::string& line, int timeoutMs) {
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);

@@ -58,16 +58,27 @@ necessário. A partida começa assim que o convidado conecta e o handshake de ve
 
 ## Requisitos
 
-- Linux/POSIX com terminal ANSI 256 cores (xterm, kitty, alacritty, GNOME Terminal, tmux...).
-- `g++` com suporte a C++17 e `make`. Nenhuma biblioteca extra.
+- **Linux/POSIX:** terminal ANSI 256 cores (xterm, kitty, alacritty, GNOME Terminal, tmux...),
+  `g++` com suporte a C++17 e `make`.
+- **Windows 10 (1809+) ou 11:** Windows Terminal ou o console padrão, com `g++` do MinGW-w64 e
+  `make` — por exemplo [MSYS2](https://www.msys2.org/) com
+  `pacman -S mingw-w64-ucrt-x86_64-gcc make`, compilando pelo shell "UCRT64".
+- Nenhuma biblioteca extra em nenhuma das plataformas.
 
 ## Build e execução
 
 ```bash
-make          # compila o binário ./truco
+make          # compila o binário ./truco (truco.exe no Windows)
 make run      # compila e executa
 make test     # compila e roda a suíte de testes
 make clean    # remove build/ e o binário
+```
+
+No Windows o `truco.exe` é ligado estaticamente: pode ser copiado e executado em outra máquina
+sem instalar o MSYS2. Também dá para gerar o `.exe` a partir do Linux com o cross-compilador:
+
+```bash
+make clean && make CXX=x86_64-w64-mingw32-g++-posix OS=Windows_NT
 ```
 
 Seed fixa (útil para reproduzir uma partida e para depuração):
@@ -120,7 +131,7 @@ nunca acessa a mão do jogador — o tipo `PublicView` não tem campo para isso.
 src/
   core/     regras puras: cartas, baralho, vazas, apostas, partida (sem I/O)
   ai/       heurística da CPU sobre informação pública
-  ui/       terminal (termios/ANSI), parser de mouse, layout e renderização
+  ui/       terminal (termios no POSIX, console VT no Windows), parser de mouse, layout e renderização
   app/      máquina de estados e loop de eventos
   main.cpp  composição do processo
 tests/      suíte de testes com asserts, sem framework
@@ -137,6 +148,6 @@ renderização, resize e uma partida completa simulada até 12 pontos.
 
 - A LAN é local (mesma rede), sem internet/WAN, TLS, reconexão, espectadores ou chat.
 - Não há persistência de partidas, áudio ou configuração de dificuldade.
-- Windows não é suportado.
+- No Windows é preciso um console com suporte a ANSI (Windows 10 1809+); `cmd` antigo e MSVC não são alvo.
 - O jogo depende de terminal interativo; redirecionar stdin/saída padrão desativa o modo raw e o
   mouse.
